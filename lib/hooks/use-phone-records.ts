@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PhoneRecord, LogEntry, Comment, Database } from '@/types';
 
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('Missing environment variables for Supabase connection');
+}
 interface AddPhoneRecordParams {
   phoneNumber: string;
   isDangerous: boolean;
