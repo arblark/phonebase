@@ -23,7 +23,11 @@ interface ActionLogsProps {
 }
 
 export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+  };
 
   const filteredLogs = date
     ? logs.filter(log => {
@@ -64,7 +68,7 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
               <CalendarComponent
                 mode="single"
                 selected={date}
-                onSelect={setDate}
+                onSelect={handleDateSelect}
                 initialFocus
               />
             </PopoverContent>
