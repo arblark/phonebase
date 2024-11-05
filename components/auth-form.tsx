@@ -19,7 +19,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      setError('Please enter both username and password');
+      setError('Введите имя и пароль');
       return;
     }
 
@@ -29,7 +29,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
     try {
       const success = await onLogin(username, password);
       if (!success) {
-        setError('Invalid username or password');
+        setError('Кривое имя или пароль');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -52,7 +52,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
           <div className="space-y-2">
             <Input
               type="text"
-              placeholder="Username"
+              placeholder="Логин"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={loading}
@@ -64,7 +64,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
           <div className="space-y-2">
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="Пароль"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -89,15 +89,15 @@ export function AuthForm({ onLogin }: AuthFormProps) {
                 Logging in...
               </span>
             ) : (
-              'Login'
+              'Вход'
             )}
           </Button>
         </form>
         <div className="mt-4 text-sm text-gray-500">
-          <p className="font-medium mb-1">Available accounts:</p>
+          <p className="font-medium mb-1">Пароли узнать у админа:</p>
           <div className="space-y-1 bg-gray-50 p-2 rounded">
-            <p>Admin: admin/admin123</p>
-            <p>User: user/user123</p>
+            <p>Admin: admin/***</p>
+            <p>User: user/***</p>
           </div>
         </div>
       </CardContent>

@@ -23,7 +23,7 @@ interface ActionLogsProps {
 }
 
 export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [date, setDate] = useState<Date>(new Date());
 
   const filteredLogs = date
     ? logs.filter(log => {
@@ -41,12 +41,12 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <ClipboardList className="w-4 h-4" />
-          View Logs
+          Логи
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle>Action Logs</DialogTitle>
+          <DialogTitle>Действия на сайте</DialogTitle>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -57,7 +57,7 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
                 )}
               >
                 <Calendar className="mr-2 h-4 w-4" />
-                {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                {date ? format(date, 'PPP') : <span>Выбрать дату</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">

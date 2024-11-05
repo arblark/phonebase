@@ -44,15 +44,15 @@ export function AddPhoneDialog({ onAdd }: AddPhoneDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add New Phone Number</Button>
+        <Button>Добавить номер</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Phone Number</DialogTitle>
+          <DialogTitle>Добавить новый номер</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Номер телефона</Label>
             <Input
               id="phone"
               value={phoneNumber}
@@ -63,7 +63,7 @@ export function AddPhoneDialog({ onAdd }: AddPhoneDialogProps) {
           </div>
           
           <div className="flex items-center justify-between space-x-2 p-4 rounded-lg border">
-            <Label htmlFor="rating-type" className="font-medium">Rating Type</Label>
+            <Label htmlFor="rating-type" className="font-medium">Норм или НЕнорм</Label>
             <div className="flex items-center gap-2">
               <span className={cn(
                 "text-sm transition-colors",
@@ -86,12 +86,12 @@ export function AddPhoneDialog({ onAdd }: AddPhoneDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="comment">Initial Comment</Label>
+            <Label htmlFor="comment">Комментарий</Label>
             <Input
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Add a comment..."
+              placeholder="Добавьте комментарий..."
             />
           </div>
 
@@ -102,7 +102,7 @@ export function AddPhoneDialog({ onAdd }: AddPhoneDialogProps) {
               isPositive ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
             )}
           >
-            Add Phone Number
+            Добавить номер
           </Button>
         </form>
       </DialogContent>

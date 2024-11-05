@@ -56,7 +56,7 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, isAdmin }: Ph
       <CardContent>
         <div className="space-y-2">
           <div className="text-sm text-gray-500">
-            Added: {record.dateAdded}
+            Добавлено: {record.dateAdded}
           </div>
           <div className="space-y-1">
             {record.comments.map((comment) => (
@@ -95,7 +95,7 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, isAdmin }: Ph
           </div>
           <div className="flex gap-2 mt-4">
             <Input
-              placeholder="Add a comment"
+              placeholder="Добавить комментарий"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               className="transition-all duration-200 focus:ring-2"
@@ -129,7 +129,7 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, isAdmin }: Ph
               size="sm"
               className="transition-transform hover:scale-105"
             >
-              Add
+              Добавить
             </Button>
           </div>
         </div>

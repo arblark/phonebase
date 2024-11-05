@@ -182,7 +182,7 @@ export function usePhoneRecords(): PhoneRecordsState {
         if (commentError) throw commentError;
       }
 
-      await addLog(userId, 'Add Phone Number', `Added phone number ${phoneNumber} with initial rating ${rating}`);
+      await addLog(userId, 'Добавлен номер', `Добавлен номер ${phoneNumber} с рейтингом ${rating}`);
       await fetchPhoneRecords();
       return record;
     } catch (error) {
@@ -235,8 +235,8 @@ export function usePhoneRecords(): PhoneRecordsState {
 
       await addLog(
         userId,
-        'Add Comment',
-        `Added ${isPositive ? 'positive' : 'negative'} comment to ${record.phone_number}: "${text}"`
+        'Добавлен комментарий',
+        `Добавлен ${isPositive ? 'позитивный' : 'негативный'} комментарий к номеру ${record.phone_number}: "${text}"`
       );
       await fetchPhoneRecords();
     } catch (error) {
@@ -288,8 +288,8 @@ export function usePhoneRecords(): PhoneRecordsState {
 
       await addLog(
         userId,
-        'Delete Comment',
-        `Deleted comment "${comment.text}" from ${record.phone_number}`
+        'Удалён комментарий',
+        `Удалён комментарий "${comment.text}" в номере ${record.phone_number}`
       );
       await fetchPhoneRecords();
     } catch (error) {
