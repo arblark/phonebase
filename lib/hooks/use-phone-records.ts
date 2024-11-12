@@ -21,6 +21,7 @@ interface PhoneRecordsState {
   addPhoneRecord: (params: AddPhoneRecordParams) => Promise<Database['public']['Tables']['phone_records']['Row'] | null>;
   addComment: (phoneId: string, text: string, isPositive: boolean, userId: string) => Promise<void>;
   deleteComment: (phoneId: string, commentId: string, userId: string) => Promise<void>;
+  updateRating: (phoneId: string, increment: boolean, userId: string) => Promise<void>;
 }
 
 type DatabaseLog = Database['public']['Tables']['logs']['Row'];
@@ -297,6 +298,43 @@ export function usePhoneRecords(): PhoneRecordsState {
     }
   };
 
+  const updateRating = async (
+    phoneId: string, 
+    increment: boolean,
+    userId: string
+  ): Promise<void> => {
+    try {
+      const { data: record, error: recordError } = await supabase
+        .from('phone_records')
+        .select('rating, phone_number')
+        .eq('id', phoneId)
+        .single();
+
+      if (recordError) throw recordError;
+
+      const newRating = record.rating + (increment ? 1 : -1);
+
+      const { error: updateError } = await supabase
+        .from('phone_records')
+        .update({ 
+          rating: newRating,
+          is_dangerous: newRating < 0
+        })
+        .eq('id', phoneId);
+
+      if (updateError) throw updateError;
+
+      await addLog(
+        userId,
+        'Изменен рейтинг',
+        `${increment ? 'Увеличен' : 'Уменьшен'} рейтинг номера ${record.phone_number} (с ${record.rating} до ${newRating})`
+      );
+      await fetchPhoneRecords();
+    } catch (error) {
+      console.error('Error updating rating:', error);
+    }
+  };
+
   return {
     phoneRecords,
     logs,
@@ -305,5 +343,6 @@ export function usePhoneRecords(): PhoneRecordsState {
     addPhoneRecord,
     addComment,
     deleteComment,
+    updateRating,
   };
 }

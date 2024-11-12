@@ -24,7 +24,7 @@ import {
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
-  const { phoneRecords, logs, loading, logsLoading, addPhoneRecord, addComment, deleteComment } = usePhoneRecords();
+  const { phoneRecords, logs, loading, logsLoading, addPhoneRecord, addComment, deleteComment, updateRating } = usePhoneRecords();
   const [searchQuery, setSearchQuery] = useState('');
   const [initializing, setInitializing] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -46,11 +46,11 @@ export default function Home() {
     return (phoneRecords || []).filter(record => {
       const searchNumbers = searchQuery.replace(/\D/g, '');
       const phoneNumbers = record.phoneNumber.replace(/\D/g, '');
-      return searchNumbers.length >= 3 ? phoneNumbers.includes(searchNumbers) : true;
+      return searchNumbers.length >= 10 ? phoneNumbers.includes(searchNumbers) : true;
     }).map(record => ({
       ...record,
-      blurred: currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length < 3,
-    }));
+      blurred: currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length < 10,
+    })).slice(0,6);
   }, [phoneRecords, searchQuery, currentUser?.role]);
 
   if (initializing) {
@@ -58,7 +58,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Initializing...</span>
+          <span>Инициализация...</span>
         </div>
       </div>
     );
@@ -89,6 +89,11 @@ export default function Home() {
   const handleDeleteComment = async (phoneId: string, commentId: string) => {
     if (!currentUser) return;
     await deleteComment(phoneId, commentId, currentUser.id);
+  };
+
+  const handleUpdateRating = async (phoneId: string, increment: boolean) => {
+    if (!currentUser) return;
+    await updateRating(phoneId, increment, currentUser.id);
   };
 
   const MobileMenu = () => (
@@ -160,7 +165,7 @@ export default function Home() {
                   record={record}
                   onAddComment={handleAddComment}
                   onDeleteComment={handleDeleteComment}
-                  isAdmin={currentUser.role === 'admin'}
+                  onUpdateRating={handleUpdateRating}
                 />
               ))}
             </div>

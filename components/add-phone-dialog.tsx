@@ -57,7 +57,7 @@ export function AddPhoneDialog({ onAdd }: AddPhoneDialogProps) {
               id="phone"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+7 999 999-99-99"
+              placeholder="+7(999)999-99-99"
               required
             />
           </div>
@@ -69,7 +69,7 @@ export function AddPhoneDialog({ onAdd }: AddPhoneDialogProps) {
                 "text-sm transition-colors",
                 isPositive ? "text-green-600" : "text-red-600"
               )}>
-                {isPositive ? "Positive" : "Negative"}
+                {isPositive ? "Хороший" : "Плохой"}
               </span>
               <Switch
                 id="rating-type"
