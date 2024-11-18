@@ -20,6 +20,7 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
   const [isPositive, setIsPositive] = useState(true);
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [updatingRating, setUpdatingRating] = useState<'increment' | 'decrement' | null>(null);
 
   const handleAddComment = async () => {
     if (newComment.trim()) {
@@ -43,6 +44,15 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
     }
   };
 
+  const handleUpdateRating = async (increment: boolean) => {
+    setUpdatingRating(increment ? 'increment' : 'decrement');
+    try {
+      await onUpdateRating?.(record.id, increment);
+    } finally {
+      setUpdatingRating(null);
+    }
+  };
+
   return (
     <Card className={cn(
       "w-full border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
@@ -60,10 +70,15 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onUpdateRating?.(record.id, false)}
+              onClick={() => handleUpdateRating(false)}
+              disabled={updatingRating === 'decrement'}
               className="h-7 w-7 p-0"
             >
-              <Minus className="h-4 w-4" />
+              {updatingRating === 'decrement' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Minus className="h-4 w-4" />
+              )}
             </Button>
             <span className={cn(
               "font-medium transition-colors min-w-[2rem] text-center",
@@ -74,10 +89,15 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onUpdateRating?.(record.id, true)}
+              onClick={() => handleUpdateRating(true)}
+              disabled={updatingRating === 'increment'}
               className="h-7 w-7 p-0"
             >
-              <Plus className="h-4 w-4" />
+              {updatingRating === 'increment' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
             </Button>
           </div>
           {record.isDangerous ? (
@@ -97,19 +117,19 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
               <div 
                 key={comment.id} 
                 className={cn(
-                  "flex items-center justify-between text-sm p-2 rounded transition-all duration-200",
+                  "flex items-start justify-between text-sm p-2 rounded transition-all duration-200",
                   "hover:shadow-sm",
                   comment.isPositive ? "bg-green-50" : "bg-red-50"
                 )}
               >
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-start gap-2 flex-1 min-w-0">
                   {comment.isPositive ? (
-                    <ThumbsUp className="w-4 h-4 text-green-500 fill-green-500 flex-shrink-0" />
+                    <ThumbsUp className="w-4 h-4 text-green-500 fill-green-500 flex-shrink-0 mt-0.5" />
                   ) : (
-                    <ThumbsDown className="w-4 h-4 text-red-500 fill-red-500 flex-shrink-0" />
+                    <ThumbsDown className="w-4 h-4 text-red-500 fill-red-500 flex-shrink-0 mt-0.5" />
                   )}
                   <span className="flex-1 break-words">{comment.text}</span>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 flex-shrink-0">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 flex-shrink-0 ml-2">
                     <User className="w-3 h-3" />
                     <span>{comment.userName}</span>
                   </div>

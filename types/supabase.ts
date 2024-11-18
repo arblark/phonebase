@@ -16,6 +16,13 @@ export interface Database {
           password: string;
           role: 'admin' | 'user';
           created_at: string;
+          telegram_id?: string;
+          verification_code?: string;
+          code_expires_at?: string;
+          daily_password?: string;
+          password_expires_at?: string;
+          device_id?: string;
+          password_requested_at?: string;
         };
         Insert: {
           id?: string;
@@ -23,6 +30,10 @@ export interface Database {
           password: string;
           role: 'admin' | 'user';
           created_at?: string;
+          telegram_id?: string;
+          verification_code?: string;
+          code_expires_at?: string;
+          daily_password?: string;
         };
         Update: {
           id?: string;
@@ -30,6 +41,10 @@ export interface Database {
           password?: string;
           role?: 'admin' | 'user';
           created_at?: string;
+          telegram_id?: string;
+          verification_code?: string;
+          code_expires_at?: string;
+          daily_password?: string;
         };
       };
       phone_records: {
