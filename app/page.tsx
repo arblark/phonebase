@@ -21,6 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { UsersDialog } from '@/components/users-dialog';
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
@@ -112,7 +113,12 @@ export default function Home() {
           </SheetDescription>
         </SheetHeader>
         <div className="mt-4 space-y-4">
-          {currentUser.role === 'admin' && <ActionLogs logs={logs} loading={logsLoading} />}
+          {currentUser.role === 'admin' && (
+            <>
+              <ActionLogs logs={logs} loading={logsLoading} />
+              <UsersDialog />
+            </>
+          )}
           <AddPhoneDialog onAdd={handleAddPhoneRecord} />
           <Button variant="outline" onClick={logout} className="w-full gap-2">
             <LogOut className="w-4 h-4" />
@@ -131,7 +137,12 @@ export default function Home() {
             <h1 className="text-2xl sm:text-3xl font-bold">База телефонов с отзывами</h1>
             <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
               <div className="hidden md:flex items-center gap-4">
-                {currentUser.role === 'admin' && <ActionLogs logs={logs} loading={logsLoading} />}
+                {currentUser.role === 'admin' && (
+                  <>
+                    <ActionLogs logs={logs} loading={logsLoading} />
+                    <UsersDialog />
+                  </>
+                )}
                 <AddPhoneDialog onAdd={handleAddPhoneRecord} />
                 <Button variant="outline" onClick={logout} className="gap-2">
                   <LogOut className="w-4 h-4" />
@@ -166,6 +177,7 @@ export default function Home() {
                   onAddComment={handleAddComment}
                   onDeleteComment={handleDeleteComment}
                   onUpdateRating={handleUpdateRating}
+                  currentUser={currentUser}
                 />
               ))}
             </div>

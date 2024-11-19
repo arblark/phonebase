@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from 'react';
-import { PhoneRecord } from '@/types';
+import { PhoneRecord, User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ThumbsUp, ThumbsDown, Trash2, ShieldAlert, ShieldCheck, User, Plus, Minus, Loader2 } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Trash2, ShieldAlert, ShieldCheck, CircleUser, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PhoneCardProps {
@@ -13,9 +13,10 @@ interface PhoneCardProps {
   onAddComment: (id: string, comment: string, isPositive: boolean) => void;
   onDeleteComment: (phoneId: string, commentId: string) => void;
   onUpdateRating?: (phoneId: string, increment: boolean) => void;
+  currentUser: User | null;
 }
 
-export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRating }: PhoneCardProps) {
+export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRating, currentUser }: PhoneCardProps) {
   const [newComment, setNewComment] = useState('');
   const [isPositive, setIsPositive] = useState(true);
   const [isAddingComment, setIsAddingComment] = useState(false);
@@ -129,24 +130,29 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
                     <ThumbsDown className="w-4 h-4 text-red-500 fill-red-500 flex-shrink-0 mt-0.5" />
                   )}
                   <span className="flex-1 break-words">{comment.text}</span>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 flex-shrink-0 ml-2">
-                    <User className="w-3 h-3" />
-                    <span>{comment.userName}</span>
+                  <div className="flex flex-col items-end gap-1 text-xs text-gray-500 flex-shrink-0 ml-2">
+                    <div className="flex items-center gap-1">
+                      <CircleUser className="w-3 h-3" />
+                      <span>{comment.userName}</span>
+                    </div>
+                    <span>{comment.dateAdded}</span>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteComment(comment.id)}
-                  disabled={deletingCommentId === comment.id}
-                  className="ml-2 flex-shrink-0 hover:bg-red-100 transition-colors"
-                >
-                  {deletingCommentId === comment.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  )}
-                </Button>
+                {currentUser?.role === 'admin' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteComment(comment.id)}
+                    disabled={deletingCommentId === comment.id}
+                    className="ml-2 flex-shrink-0 hover:bg-red-100 transition-colors"
+                  >
+                    {deletingCommentId === comment.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    )}
+                  </Button>
+                )}
               </div>
             ))}
           </div>
