@@ -259,7 +259,7 @@ export function useAuth() {
   const logout = () => {
     clearSession();
     localStorage.removeItem('userSession');
-    localStorage.removeItem('deviceId');
+    //localStorage.removeItem('deviceId');
     setCurrentUser(null);
   };
 
