@@ -7,6 +7,16 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'База номеров',
   description: 'Ищи, комментируй и проверяй, да да',
+  icons: {
+    icon: [
+      {
+        url: '/icon.png',
+        href: '/icon.png',
+      }
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon.png',
+  }
 };
 
 export default function RootLayout({
@@ -15,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body className={inter.className}>{children}</body>
     </html>
   );

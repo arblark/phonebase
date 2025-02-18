@@ -62,45 +62,58 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-bold">
-          <span className={record.blurred ? "blur-sm" : ""}>
+          <span className={cn(
+            record.blurred ? "blur-sm select-none" : "",
+            "cursor-default"
+          )}>
             {record.phoneNumber}
           </span>
         </CardTitle>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleUpdateRating(false)}
-              disabled={updatingRating === 'decrement'}
-              className="h-7 w-7 p-0"
-            >
-              {updatingRating === 'decrement' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Minus className="h-4 w-4" />
-              )}
-            </Button>
+          {currentUser?.role === 'admin' && (
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleUpdateRating(false)}
+                disabled={updatingRating === 'decrement'}
+                className="h-7 w-7 p-0"
+              >
+                {updatingRating === 'decrement' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Minus className="h-4 w-4" />
+                )}
+              </Button>
+              <span className={cn(
+                "font-medium transition-colors min-w-[2rem] text-center",
+                record.isDangerous ? "text-red-500" : "text-green-500"
+              )}>
+                {record.rating}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleUpdateRating(true)}
+                disabled={updatingRating === 'increment'}
+                className="h-7 w-7 p-0"
+              >
+                {updatingRating === 'increment' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          )}
+          {currentUser?.role === 'user' && (
             <span className={cn(
               "font-medium transition-colors min-w-[2rem] text-center",
               record.isDangerous ? "text-red-500" : "text-green-500"
             )}>
               {record.rating}
             </span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleUpdateRating(true)}
-              disabled={updatingRating === 'increment'}
-              className="h-7 w-7 p-0"
-            >
-              {updatingRating === 'increment' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+          )}
           {record.isDangerous ? (
             <ShieldAlert className="w-5 h-5 text-red-500 transition-transform hover:scale-110" />
           ) : (
@@ -111,7 +124,7 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
       <CardContent>
         <div className="space-y-2">
           <div className="text-sm text-gray-500">
-            Добавлено: {record.dateAdded}
+            <span>Добавлено: {record.dateAdded}</span>
           </div>
           <div className="space-y-1">
             {record.comments.map((comment) => (
@@ -135,7 +148,8 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
                       <CircleUser className="w-3 h-3" />
                       <span>{comment.userName}</span>
                     </div>
-                    <span>{comment.dateAdded}</span>
+                    <span>{comment.dateAdded.split(',')[0]}</span>
+                    <span>{comment.dateAdded.split(',')[1]}</span>
                   </div>
                 </div>
                 {currentUser?.role === 'admin' && (

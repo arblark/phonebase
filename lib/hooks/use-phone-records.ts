@@ -115,7 +115,13 @@ export function usePhoneRecords(): PhoneRecordsState {
             id: comment.id,
             text: comment.text,
             isPositive: comment.is_positive,
-            dateAdded: new Date(comment.date_added).toLocaleDateString(),
+            dateAdded: new Date(comment.date_added).toLocaleString('ru-RU', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
             userId: comment.user_id,
             userName: comment.users?.username || 'Unknown User'
           }));
@@ -125,7 +131,13 @@ export function usePhoneRecords(): PhoneRecordsState {
             phoneNumber: record.phone_number,
             isDangerous: record.is_dangerous,
             rating: record.rating,
-            dateAdded: new Date(record.date_added).toLocaleDateString(),
+            dateAdded: new Date(record.date_added).toLocaleString('ru-RU', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
             comments: formattedComments
           };
         })
