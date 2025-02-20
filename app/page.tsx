@@ -22,6 +22,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { UsersDialog } from '@/components/users-dialog';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
@@ -29,6 +30,8 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [initializing, setInitializing] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAddPhoneDialogOpen, setIsAddPhoneDialogOpen] = useState(false);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -44,14 +47,19 @@ export default function Home() {
   }, []);
 
   const filteredRecords = useMemo(() => {
-    return (phoneRecords || []).filter(record => {
-      const searchNumbers = searchQuery.replace(/\D/g, '');
+    const searchNumbers = searchQuery.replace(/\D/g, '');
+    const records = (phoneRecords || []).filter(record => {
       const phoneNumbers = record.phoneNumber.replace(/\D/g, '');
+      if (currentUser?.role === 'user') {
+        return searchNumbers.length >= 10 && phoneNumbers.includes(searchNumbers);
+      }
       return searchNumbers.length >= 10 ? phoneNumbers.includes(searchNumbers) : true;
     }).map(record => ({
       ...record,
       blurred: currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length < 10,
-    })).slice(0,6);
+    }));
+
+    return currentUser?.role === 'admin' ? records.slice(0, 6) : records;
   }, [phoneRecords, searchQuery, currentUser?.role]);
 
   if (initializing) {
@@ -119,7 +127,12 @@ export default function Home() {
               <UsersDialog />
             </>
           )}
-          <AddPhoneDialog onAdd={handleAddPhoneRecord} />
+          <AddPhoneDialog 
+            onAdd={handleAddPhoneRecord} 
+            initialPhoneNumber={searchQuery}
+            open={isAddPhoneDialogOpen}
+            onOpenChange={setIsAddPhoneDialogOpen}
+          />
           <Button variant="outline" onClick={logout} className="w-full gap-2">
             <LogOut className="w-4 h-4" />
             Выйти
@@ -131,6 +144,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {editingCardId && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={(e) => e.preventDefault()}
+          onMouseDown={(e) => e.preventDefault()}
+          onMouseUp={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()}
+          onTouchEnd={(e) => e.preventDefault()}
+        />
+      )}
       <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 md:py-8">
         <div className="flex flex-col gap-4 sm:gap-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -143,8 +166,20 @@ export default function Home() {
                     <UsersDialog />
                   </>
                 )}
-                <AddPhoneDialog onAdd={handleAddPhoneRecord} />
-                <Button variant="outline" onClick={logout} className="gap-2">
+                <AddPhoneDialog 
+                  onAdd={handleAddPhoneRecord} 
+                  initialPhoneNumber={searchQuery}
+                  open={isAddPhoneDialogOpen}
+                  onOpenChange={setIsAddPhoneDialogOpen}
+                  currentUser={currentUser}
+                  disabled={editingCardId !== null}
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={logout} 
+                  className="gap-2"
+                  disabled={editingCardId !== null}
+                >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Выйти</span>
                 </Button>
@@ -161,6 +196,7 @@ export default function Home() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Поиск номера телефона"
+              disabled={editingCardId !== null}
             />
           </div>
 
@@ -169,18 +205,44 @@ export default function Home() {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredRecords.map((record) => (
-                <PhoneCard
-                  key={record.id}
-                  record={record}
-                  onAddComment={handleAddComment}
-                  onDeleteComment={handleDeleteComment}
-                  onUpdateRating={handleUpdateRating}
-                  currentUser={currentUser}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredRecords.map((record) => (
+                  <PhoneCard
+                    key={record.id}
+                    record={record}
+                    onAddComment={handleAddComment}
+                    onDeleteComment={handleDeleteComment}
+                    onUpdateRating={handleUpdateRating}
+                    currentUser={currentUser}
+                    onCommentEditStart={() => setEditingCardId(record.id)}
+                    onCommentEditEnd={() => setEditingCardId(null)}
+                    disabled={editingCardId !== null && editingCardId !== record.id}
+                    className={cn(
+                      "relative",
+                      editingCardId === record.id && "z-50"
+                    )}
+                  />
+                ))}
+              </div>
+              {currentUser?.role === 'user' && 
+               searchQuery.replace(/\D/g, '').length >= 10 && 
+               filteredRecords.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                  <p className="text-gray-600 mb-4">
+                    Номер {searchQuery} не найден в базе данных.
+                    {currentUser?.role === 'user' && " Вы можете добавить его:"}
+                  </p>
+                  <Button 
+                    onClick={() => setIsAddPhoneDialogOpen(true)}
+                    className="gap-2"
+                    disabled={editingCardId !== null}
+                  >
+                    Добавить номер
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

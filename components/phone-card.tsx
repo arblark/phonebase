@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { PhoneRecord, User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,39 @@ interface PhoneCardProps {
   onDeleteComment: (phoneId: string, commentId: string) => void;
   onUpdateRating?: (phoneId: string, increment: boolean) => void;
   currentUser: User | null;
+  onCommentEditStart?: () => void;
+  onCommentEditEnd?: () => void;
+  disabled?: boolean;
+  className?: string;
 }
 
-export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRating, currentUser }: PhoneCardProps) {
+export function PhoneCard({ 
+  record, 
+  onAddComment, 
+  onDeleteComment, 
+  onUpdateRating, 
+  currentUser,
+  onCommentEditStart,
+  onCommentEditEnd,
+  disabled,
+  className
+}: PhoneCardProps) {
   const [newComment, setNewComment] = useState('');
   const [isPositive, setIsPositive] = useState(true);
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [updatingRating, setUpdatingRating] = useState<'increment' | 'decrement' | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const commentInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (!isEditing && value.trim() && currentUser?.role === 'user') {
+      setIsEditing(true);
+      onCommentEditStart?.();
+    }
+    setNewComment(value);
+  };
 
   const handleAddComment = async () => {
     if (newComment.trim()) {
@@ -30,6 +55,10 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
         await onAddComment(record.id, newComment, isPositive);
         setNewComment('');
         setIsPositive(true);
+        if (currentUser?.role === 'user') {
+          setIsEditing(false);
+          onCommentEditEnd?.();
+        }
       } finally {
         setIsAddingComment(false);
       }
@@ -58,7 +87,9 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
     <Card className={cn(
       "w-full border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
       record.isDangerous ? "border-red-500" : "border-green-500",
-      "hover:border-opacity-75 hover:scale-[1.02]"
+      "hover:border-opacity-75 hover:scale-[1.02]",
+      disabled && "opacity-50 pointer-events-none",
+      className
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-bold">
@@ -172,9 +203,10 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
           </div>
           <div className="flex gap-2 mt-4">
             <Input
+              ref={commentInputRef}
               placeholder="Текст"
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              onChange={handleCommentChange}
               className="transition-all duration-200 focus:ring-2"
             />
             <div className="flex gap-1">
@@ -186,6 +218,7 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
                   "transition-all duration-200",
                   isPositive ? "bg-green-500 hover:bg-green-600" : ""
                 )}
+                disabled={!newComment.trim()}
               >
                 <ThumbsUp className="w-4 h-4" />
               </Button>
@@ -197,6 +230,7 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
                   "transition-all duration-200",
                   !isPositive ? "bg-red-500 hover:bg-red-600" : ""
                 )}
+                disabled={!newComment.trim()}
               >
                 <ThumbsDown className="w-4 h-4" />
               </Button>
@@ -214,6 +248,11 @@ export function PhoneCard({ record, onAddComment, onDeleteComment, onUpdateRatin
               )}
             </Button>
           </div>
+          {isEditing && currentUser?.role === 'user' && (
+            <p className="text-sm text-yellow-600 mt-2">
+              Сохраните комментарий, прежде чем продолжить
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

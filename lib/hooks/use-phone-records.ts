@@ -164,6 +164,21 @@ export function usePhoneRecords(): PhoneRecordsState {
     initialComment 
   }: AddPhoneRecordParams): Promise<Database['public']['Tables']['phone_records']['Row'] | null> => {
     try {
+      // Проверяем, существует ли уже такой номер
+      const { data: existingRecord, error: searchError } = await supabase
+        .from('phone_records')
+        .select('id, phone_number')
+        .eq('phone_number', phoneNumber)
+        .single();
+
+      if (searchError && searchError.code !== 'PGRST116') {
+        throw searchError;
+      }
+
+      if (existingRecord) {
+        throw new Error('Такой номер уже существует в базе');
+      }
+
       const now = new Date().toISOString();
       
       const { data: record, error: recordError } = await supabase
@@ -195,12 +210,16 @@ export function usePhoneRecords(): PhoneRecordsState {
         if (commentError) throw commentError;
       }
 
-      await addLog(userId, 'Добавлен номер', `Добавлен номер ${phoneNumber} с рейтингом ${rating}`);
+      await addLog(
+        userId, 
+        'Добавлен номер', 
+        `Добавлен номер ${phoneNumber} с рейтингом ${rating}${initialComment ? `. Комментарий: "${initialComment}"` : ''}`
+      );
       await fetchPhoneRecords();
       return record;
     } catch (error) {
       console.error('Error adding phone record:', error);
-      return null;
+      throw error; // Прокидываем ошибку дальше для обработки в компоненте
     }
   };
 

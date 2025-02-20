@@ -37,9 +37,11 @@ export function useAuth() {
     const session: StoredSession = JSON.parse(sessionStr);
     const now = Date.now();
 
-    if (session.user.role === 'user' && now >= session.expiresAt) {
+    if (now >= session.expiresAt) {
       localStorage.removeItem('userSession');
-      localStorage.removeItem('deviceId');
+      if (session.user.role === 'user') {
+        localStorage.removeItem('deviceId');
+      }
       setCurrentUser(null);
     }
   };
@@ -69,11 +71,9 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
-    if (currentUser?.role === 'user') {
-      const interval = setInterval(checkPasswordExpiration, 1000 * 60 * 30); // Проверка каждые 30 минут
-      return () => clearInterval(interval);
-    }
-  }, [currentUser]);
+    const interval = setInterval(checkPasswordExpiration, 1000 * 60 * 30); // Проверка каждые 30 минут
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const sessionStr = localStorage.getItem('userSession');
@@ -81,9 +81,12 @@ export function useAuth() {
       const session: StoredSession = JSON.parse(sessionStr);
       const now = Date.now();
 
-      if (session.user.role === 'user' && now >= session.expiresAt) {
+      if (now >= session.expiresAt) {
         localStorage.removeItem('userSession');
-        //localStorage.removeItem('deviceId'); // удалять ли устройстово?
+        if (session.user.role === 'user') {
+          localStorage.removeItem('deviceId');
+        }
+        setCurrentUser(null);
       } else {
         setCurrentUser(session.user);
       }
