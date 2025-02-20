@@ -105,42 +105,46 @@ export default function Home() {
     await updateRating(phoneId, increment, currentUser.id);
   };
 
-  const MobileMenu = () => (
-    <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="md:hidden ml-auto">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Открыть меню</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-[250px] sm:w-[300px]">
-        <SheetHeader>
-          <SheetTitle>Меню</SheetTitle>
-          <SheetDescription>
-            Доступ к дополнительным функциям и возможностям
-          </SheetDescription>
-        </SheetHeader>
-        <div className="mt-4 space-y-4">
-          {currentUser.role === 'admin' && (
-            <>
-              <ActionLogs logs={logs} loading={logsLoading} />
-              <UsersDialog />
-            </>
-          )}
-          <AddPhoneDialog 
-            onAdd={handleAddPhoneRecord} 
-            initialPhoneNumber={searchQuery}
-            open={isAddPhoneDialogOpen}
-            onOpenChange={setIsAddPhoneDialogOpen}
-          />
-          <Button variant="outline" onClick={logout} className="w-full gap-2">
-            <LogOut className="w-4 h-4" />
-            Выйти
+  function renderMobileMenu() {
+    return (
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon" className="md:hidden ml-auto">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Открыть меню</span>
           </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[250px] sm:w-[300px]">
+          <SheetHeader>
+            <SheetTitle>Меню</SheetTitle>
+            <SheetDescription>
+              Доступ к дополнительным функциям и возможностям
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-4">
+            {currentUser?.role === 'admin' && (
+              <>
+                <ActionLogs logs={logs} loading={logsLoading} />
+                <UsersDialog />
+              </>
+            )}
+            <AddPhoneDialog 
+              onAdd={handleAddPhoneRecord} 
+              initialPhoneNumber={searchQuery}
+              open={isAddPhoneDialogOpen}
+              onOpenChange={setIsAddPhoneDialogOpen}
+              currentUser={currentUser}
+              disabled={editingCardId !== null}
+            />
+            <Button variant="outline" onClick={logout} className="w-full gap-2">
+              <LogOut className="w-4 h-4" />
+              Выйти
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -160,7 +164,7 @@ export default function Home() {
             <h1 className="text-2xl sm:text-3xl font-bold">База телефонов с отзывами</h1>
             <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
               <div className="hidden md:flex items-center gap-4">
-                {currentUser.role === 'admin' && (
+                {currentUser?.role === 'admin' && (
                   <>
                     <ActionLogs logs={logs} loading={logsLoading} />
                     <UsersDialog />
@@ -184,7 +188,7 @@ export default function Home() {
                   <span className="hidden sm:inline">Выйти</span>
                 </Button>
               </div>
-              <MobileMenu />
+              {renderMobileMenu()}
             </div>
           </div>
 
