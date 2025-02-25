@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,14 +91,17 @@ export function UsersDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2 text-base">
           <Users className="w-4 h-4" />
           Пользователи
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Управление пользователями</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">Управление пользователями</DialogTitle>
+          <DialogDescription className="text-base">
+            Просмотр и редактирование пользователей системы
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[500px] pr-4">
           {loading ? (
@@ -109,60 +113,50 @@ export function UsersDialog() {
               {users.map((user) => (
                 <div
                   key={user.id}
-                  className="p-4 bg-gray-50 rounded-lg space-y-2 hover:bg-gray-100 transition-colors"
+                  className="p-4 bg-gray-50 rounded-lg space-y-3 hover:bg-gray-100 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{user.username}</span>
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <h3 className="font-medium text-base">Пользователь: {user.username || user.id}</h3>
+                      <p className="text-sm text-gray-500">Создан: {formatDate(user.created_at)}</p>
+                    </div>
                     {editedUser?.id === user.id ? (
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
+                        <Button 
+                          size="sm" 
                           onClick={handleSave}
-                          className="h-8 px-2"
+                          className="text-base"
                         >
-                          <Save className="w-4 h-4" />
+                          Сохранить
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
                           onClick={() => setEditedUser(null)}
-                          className="h-8 px-2"
+                          className="text-base"
                         >
-                          <X className="w-4 h-4" />
+                          Отмена
                         </Button>
                       </div>
                     ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
                         onClick={() => handleEdit(user)}
-                        className="h-8 px-2"
+                        className="text-base"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        Редактировать
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="grid gap-2">
+                  <div className="grid gap-3 text-base">
                     <div className="grid grid-cols-2 gap-2">
-                      <span className="text-sm text-gray-500">ID устройства:</span>
-                      {editedUser?.id === user.id ? (
-                        <Input
-                          value={editedUser.device_id || ''}
-                          onChange={(e) => setEditedUser({
-                            ...editedUser,
-                            device_id: e.target.value
-                          })}
-                          className="h-8"
-                        />
-                      ) : (
-                        <span className="text-sm">{user.device_id || 'Не указан'}</span>
-                      )}
+                      <span className="text-base text-gray-500">Логин:</span>
+                      <span className="text-base">{user.username || 'Не указан'}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <span className="text-sm text-gray-500">Telegram ID:</span>
+                      <span className="text-base text-gray-500">Telegram ID:</span>
                       {editedUser?.id === user.id ? (
                         <Input
                           value={editedUser.telegram_id || ''}
@@ -170,15 +164,31 @@ export function UsersDialog() {
                             ...editedUser,
                             telegram_id: e.target.value
                           })}
-                          className="h-8"
+                          className="h-8 text-base"
                         />
                       ) : (
-                        <span className="text-sm">{user.telegram_id || 'Не указан'}</span>
+                        <span className="text-base">{user.telegram_id || 'Не указан'}</span>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <span className="text-sm text-gray-500">Временный пароль:</span>
+                      <span className="text-base text-gray-500">ID устройства:</span>
+                      {editedUser?.id === user.id ? (
+                        <Input
+                          value={editedUser.device_id || ''}
+                          onChange={(e) => setEditedUser({
+                            ...editedUser,
+                            device_id: e.target.value
+                          })}
+                          className="h-8 text-base"
+                        />
+                      ) : (
+                        <span className="text-base">{user.device_id || 'Не указан'}</span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <span className="text-base text-gray-500">Временный пароль:</span>
                       {editedUser?.id === user.id ? (
                         <Input
                           value={editedUser.daily_password || ''}
@@ -186,23 +196,23 @@ export function UsersDialog() {
                             ...editedUser,
                             daily_password: e.target.value
                           })}
-                          className="h-8"
+                          className="h-8 text-base"
                         />
                       ) : (
-                        <span className="text-sm">{user.daily_password || 'Не указан'}</span>
+                        <span className="text-base">{user.daily_password || 'Не указан'}</span>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <span className="text-sm text-gray-500">Время получения пароля:</span>
-                      <span className="text-sm">
+                      <span className="text-base text-gray-500">Время получения пароля:</span>
+                      <span className="text-base">
                         {formatDate(user.password_requested_at)}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <span className="text-sm text-gray-500">Срок действия пароля:</span>
-                      <span className="text-sm">
+                      <span className="text-base text-gray-500">Срок действия пароля:</span>
+                      <span className="text-base">
                         {formatDate(user.password_expires_at)}
                       </span>
                     </div>

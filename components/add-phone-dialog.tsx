@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,7 @@ import { PhoneRecord } from '@/types';
 import { cn } from '@/lib/utils';
 import InputMask from 'react-input-mask';
 import { Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface AddPhoneDialogProps {
   onAdd: (record: Omit<PhoneRecord, 'id' | 'dateAdded' | 'comments'> & { comment?: string }) => void;
@@ -104,18 +106,26 @@ export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenCha
 
   return (
     <Dialog open={open ?? isOpen} onOpenChange={handleOpenChange}>
-      {!open && (
-        <DialogTrigger asChild>
-          <Button disabled={disabled}>Добавить номер</Button>
-        </DialogTrigger>
-      )}
-      <DialogContent>
+      <DialogTrigger asChild>
+        <Button 
+          variant="default" 
+          className="gap-2 text-base"
+          disabled={disabled}
+        >
+          <Plus className="w-4 h-4" />
+          Добавить номер
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Добавить новый номер</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">Добавить номер телефона</DialogTitle>
+          <DialogDescription className="text-base">
+            Добавьте новый номер телефона с комментарием
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">Номер телефона</Label>
+            <Label htmlFor="phone" className="text-base">Номер телефона</Label>
             <div className="relative">
               <InputMask
                 mask="8(999)999-99-99"
@@ -136,7 +146,7 @@ export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenCha
                       "[&>*]:opacity-50 [&>*]:text-muted-foreground",
                       error && "border-red-500 focus-visible:ring-red-500"
                     )}
-                    style={{ opacity: phoneNumber ? 1 : 0.5 }}
+                    style={{ opacity: phoneNumber ? 1 : 0.5, fontSize: '16px' }}
                   />
                 )}
               </InputMask>
@@ -147,10 +157,10 @@ export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenCha
           </div>
           
           <div className="flex items-center justify-between space-x-2 p-4 rounded-lg border">
-            <Label htmlFor="rating-type" className="font-medium">Норм или НЕнорм</Label>
+            <Label htmlFor="rating-type" className="font-medium text-base">Норм или НЕнорм</Label>
             <div className="flex items-center gap-2">
               <span className={cn(
-                "text-sm transition-colors",
+                "text-base transition-colors",
                 isPositive ? "text-green-600" : "text-red-600"
               )}>
                 {isPositive ? "Хороший" : "Плохой"}
@@ -170,19 +180,21 @@ export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenCha
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="comment">Комментарий</Label>
+            <Label htmlFor="comment" className="text-base">Комментарий</Label>
             <Input
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Добавьте комментарий..."
+              className="text-base"
+              style={{ fontSize: '16px' }}
             />
           </div>
 
           <Button 
             type="submit"
             className={cn(
-              "w-full transition-colors",
+              "w-full transition-colors text-base",
               isPositive ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
             )}
             disabled={phoneNumber.length < 10 || isSubmitting}

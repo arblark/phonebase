@@ -68,7 +68,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Вход в систему</CardTitle>
+        <CardTitle className="text-xl sm:text-2xl">Вход в систему</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -78,6 +78,8 @@ export function AuthForm({ onLogin }: AuthFormProps) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              className="text-base"
+              style={{ fontSize: '16px' }}
             />
           </div>
           
@@ -89,6 +91,8 @@ export function AuthForm({ onLogin }: AuthFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="text-base"
+                style={{ fontSize: '16px' }}
               />
               <Button
                 type="button"
@@ -107,13 +111,13 @@ export function AuthForm({ onLogin }: AuthFormProps) {
           </div>
           
           {error && (
-            <p className="text-sm text-red-500 bg-red-50 p-2 rounded">
+            <p className="text-base text-red-500 bg-red-50 p-2 rounded">
               {error}
             </p>
           )}
 
           {successMessage && (
-            <p className="text-sm text-green-500 bg-green-50 p-2 rounded">
+            <p className="text-base text-green-500 bg-green-50 p-2 rounded">
               {successMessage}
             </p>
           )}
@@ -121,7 +125,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
           <div className="flex gap-2">
             <Button 
               type="submit" 
-              className="flex-1"
+              className="flex-1 text-base"
               disabled={loading}
             >
               {loading ? (
@@ -139,6 +143,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
               variant="outline"
               onClick={handleRequestPassword}
               disabled={loading}
+              className="text-base"
             >
               Запросить пароль
             </Button>

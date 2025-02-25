@@ -162,33 +162,30 @@ export default function Home() {
         <div className="flex flex-col gap-4 sm:gap-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h1 className="text-2xl sm:text-3xl font-bold">База телефонов с отзывами</h1>
-            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
-              <div className="hidden md:flex items-center gap-4">
-                {currentUser?.role === 'admin' && (
-                  <>
-                    <ActionLogs logs={logs} loading={logsLoading} />
-                    <UsersDialog />
-                  </>
-                )}
-                <AddPhoneDialog 
-                  onAdd={handleAddPhoneRecord} 
-                  initialPhoneNumber={searchQuery}
-                  open={isAddPhoneDialogOpen}
-                  onOpenChange={setIsAddPhoneDialogOpen}
-                  currentUser={currentUser}
-                  disabled={editingCardId !== null}
-                />
-                <Button 
-                  variant="outline" 
-                  onClick={logout} 
-                  className="gap-2"
-                  disabled={editingCardId !== null}
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Выйти</span>
-                </Button>
-              </div>
-              {renderMobileMenu()}
+            <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-4">
+              {currentUser?.role === 'admin' && (
+                <>
+                  <ActionLogs logs={logs} loading={logsLoading} />
+                  <UsersDialog />
+                </>
+              )}
+              <AddPhoneDialog 
+                onAdd={handleAddPhoneRecord} 
+                initialPhoneNumber={searchQuery}
+                open={isAddPhoneDialogOpen}
+                onOpenChange={setIsAddPhoneDialogOpen}
+                currentUser={currentUser}
+                disabled={editingCardId !== null}
+              />
+              <Button 
+                variant="outline" 
+                onClick={logout} 
+                className="gap-2"
+                disabled={editingCardId !== null}
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Выйти</span>
+              </Button>
             </div>
           </div>
 

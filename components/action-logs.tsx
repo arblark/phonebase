@@ -43,20 +43,20 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2 text-base">
           <ClipboardList className="w-4 h-4" />
           Логи
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle>Действия на сайте</DialogTitle>
+        <DialogHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <DialogTitle className="text-base sm:text-lg">Действия на сайте</DialogTitle>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
-                  "justify-start text-left font-normal",
+                  "justify-start text-left font-normal text-base min-h-10 w-full sm:w-auto",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -80,8 +80,8 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : filteredLogs.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {date ? 'No logs available for selected date' : 'No logs available'}
+            <div className="text-center py-8 text-gray-500 text-base">
+              {date ? 'Нет логов для выбранной даты' : 'Логи отсутствуют'}
             </div>
           ) : (
             <div className="space-y-4">
@@ -90,14 +90,14 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
                   key={log.id}
                   className="p-3 bg-gray-50 rounded-lg space-y-1 hover:bg-gray-100 transition-colors"
                 >
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-base">
                     <span className="font-medium">{log.action}</span>
                     <span className="text-gray-500">
                       {new Date(log.timestamp).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600">{log.details}</p>
-                  <p className="text-xs text-gray-400">User: {log.user}</p>
+                  <p className="text-base text-gray-600">{log.details}</p>
+                  <p className="text-sm text-gray-400">Пользователь: {log.user}</p>
                 </div>
               ))}
             </div>

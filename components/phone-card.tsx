@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { PhoneRecord, User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ThumbsUp, ThumbsDown, Trash2, ShieldAlert, ShieldCheck, CircleUser, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,16 +38,48 @@ export function PhoneCard({
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [updatingRating, setUpdatingRating] = useState<'increment' | 'decrement' | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const commentInputRef = useRef<HTMLInputElement>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Фильтрация комментариев в зависимости от роли пользователя
+  const filteredComments = useMemo(() => {
+    if (!currentUser) return [];
+    
+    if (currentUser.role === 'admin') {
+      return record.comments;
+    }
+
+    // Для обычных пользователей показываем только их комментарии за текущий день
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('ru-RU');
+
+    return record.comments.filter(comment => {
+      const commentDateStr = comment.dateAdded.split(',')[0].trim();
+      return comment.userId === currentUser.id && 
+             commentDateStr === todayStr;
+    });
+  }, [record.comments, currentUser]);
+
+  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     if (!isEditing && value.trim() && currentUser?.role === 'user') {
       setIsEditing(true);
       onCommentEditStart?.();
     }
     setNewComment(value);
+    
+    // Автоматическое изменение высоты поля ввода
+    if (commentInputRef.current) {
+      commentInputRef.current.style.height = 'auto';
+      commentInputRef.current.style.height = `${commentInputRef.current.scrollHeight}px`;
+    }
   };
+
+  // Сбрасываем высоту поля ввода при очистке комментария
+  useEffect(() => {
+    if (newComment === '' && commentInputRef.current) {
+      commentInputRef.current.style.height = 'auto';
+    }
+  }, [newComment]);
 
   const handleAddComment = async () => {
     if (newComment.trim()) {
@@ -158,11 +191,11 @@ export function PhoneCard({
             <span>Добавлено: {record.dateAdded}</span>
           </div>
           <div className="space-y-1">
-            {record.comments.map((comment) => (
+            {filteredComments.map((comment) => (
               <div 
                 key={comment.id} 
                 className={cn(
-                  "flex items-start justify-between text-sm p-2 rounded transition-all duration-200",
+                  "flex flex-col text-sm p-2 rounded transition-all duration-200",
                   "hover:shadow-sm",
                   comment.isPositive ? "bg-green-50" : "bg-red-50"
                 )}
@@ -173,8 +206,11 @@ export function PhoneCard({
                   ) : (
                     <ThumbsDown className="w-4 h-4 text-red-500 fill-red-500 flex-shrink-0 mt-0.5" />
                   )}
-                  <span className="flex-1 break-words">{comment.text}</span>
-                  <div className="flex flex-col items-end gap-1 text-xs text-gray-500 flex-shrink-0 ml-2">
+                  <span className="flex-1 break-words text-base">{comment.text}</span>
+                </div>
+                
+                <div className="flex items-center justify-between mt-2 text-xs text-gray-500 px-6">
+                  <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       <CircleUser className="w-3 h-3" />
                       <span>{comment.userName}</span>
@@ -182,71 +218,77 @@ export function PhoneCard({
                     <span>{comment.dateAdded.split(',')[0]}</span>
                     <span>{comment.dateAdded.split(',')[1]}</span>
                   </div>
+                  
+                  {currentUser?.role === 'admin' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteComment(comment.id)}
+                      disabled={deletingCommentId === comment.id}
+                      className="hover:bg-red-100 transition-colors h-6 w-6 p-0"
+                    >
+                      {deletingCommentId === comment.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      )}
+                    </Button>
+                  )}
                 </div>
-                {currentUser?.role === 'admin' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteComment(comment.id)}
-                    disabled={deletingCommentId === comment.id}
-                    className="ml-2 flex-shrink-0 hover:bg-red-100 transition-colors"
-                  >
-                    {deletingCommentId === comment.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    )}
-                  </Button>
-                )}
               </div>
             ))}
           </div>
-          <div className="flex gap-2 mt-4">
-            <Input
+          <div className="flex flex-col gap-3 mt-4">
+            <Textarea
               ref={commentInputRef}
-              placeholder="Текст"
+              placeholder="Введите комментарий..."
               value={newComment}
               onChange={handleCommentChange}
-              className="transition-all duration-200 focus:ring-2"
+              className="transition-all duration-200 focus:ring-2 text-base min-h-[40px] resize-none"
+              style={{ fontSize: '16px' }}
             />
-            <div className="flex gap-1">
-              <Button
+            <div className="flex flex-wrap gap-2 justify-between">
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant={isPositive ? "default" : "outline"}
+                  onClick={() => setIsPositive(true)}
+                  className={cn(
+                    "transition-all duration-200",
+                    isPositive ? "bg-green-500 hover:bg-green-600" : ""
+                  )}
+                  disabled={!newComment.trim()}
+                >
+                  <ThumbsUp className="w-4 h-4 mr-1" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={!isPositive ? "default" : "outline"}
+                  onClick={() => setIsPositive(false)}
+                  className={cn(
+                    "transition-all duration-200",
+                    !isPositive ? "bg-red-500 hover:bg-red-600" : ""
+                  )}
+                  disabled={!newComment.trim()}
+                >
+                  <ThumbsDown className="w-4 h-4 mr-1" />
+                </Button>
+              </div>
+              <Button 
+                onClick={handleAddComment} 
                 size="sm"
-                variant={isPositive ? "default" : "outline"}
-                onClick={() => setIsPositive(true)}
-                className={cn(
-                  "transition-all duration-200",
-                  isPositive ? "bg-green-500 hover:bg-green-600" : ""
-                )}
-                disabled={!newComment.trim()}
+                disabled={isAddingComment || !newComment.trim()}
+                className="transition-transform hover:scale-105"
               >
-                <ThumbsUp className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant={!isPositive ? "default" : "outline"}
-                onClick={() => setIsPositive(false)}
-                className={cn(
-                  "transition-all duration-200",
-                  !isPositive ? "bg-red-500 hover:bg-red-600" : ""
+                {isAddingComment ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                ) : (
+                  <>
+                    <span>Сохранить</span>
+                  </>
                 )}
-                disabled={!newComment.trim()}
-              >
-                <ThumbsDown className="w-4 h-4" />
               </Button>
             </div>
-            <Button 
-              onClick={handleAddComment} 
-              size="sm"
-              disabled={isAddingComment || !newComment.trim()}
-              className="transition-transform hover:scale-105"
-            >
-              {isAddingComment ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Сохранить"
-              )}
-            </Button>
           </div>
           {isEditing && currentUser?.role === 'user' && (
             <p className="text-sm text-yellow-600 mt-2">
