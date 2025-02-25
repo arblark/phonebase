@@ -64,12 +64,13 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
                 {date ? format(date, 'PPP') : <span>Выбрать дату</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent className="w-auto p-0" align="start" side="bottom">
               <CalendarComponent
                 mode="single"
                 selected={date}
                 onSelect={handleDateSelect}
                 initialFocus
+                className="rounded-md border"
               />
             </PopoverContent>
           </Popover>

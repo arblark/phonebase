@@ -192,12 +192,13 @@ export default function Home() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              className="pl-10 h-10"
+              className="pl-10 h-10 text-base"
               placeholder="Поиск номера телефона..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Поиск номера телефона"
               disabled={editingCardId !== null}
+              style={{ fontSize: '16px' }}
             />
           </div>
 
