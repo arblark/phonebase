@@ -246,13 +246,20 @@ export default function Home() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent 
+                  className="w-auto p-0" 
+                  align="start" 
+                  side="bottom" 
+                  sideOffset={4}
+                  avoidCollisions={true}
+                >
                   <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     initialFocus
                     locale={ru}
+                    className="border-none p-3"
                   />
                 </PopoverContent>
               </Popover>

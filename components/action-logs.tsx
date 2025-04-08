@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -51,6 +52,9 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
       <DialogContent className="max-w-2xl">
         <DialogHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <DialogTitle className="text-base sm:text-lg">Действия на сайте</DialogTitle>
+          <DialogDescription className="sr-only">
+            Просмотр логов действий пользователей
+          </DialogDescription>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -64,13 +68,19 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
                 {date ? format(date, 'PPP') : <span>Выбрать дату</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start" side="bottom">
+            <PopoverContent 
+              className="w-auto p-0" 
+              align="start" 
+              side="bottom" 
+              sideOffset={4}
+              avoidCollisions={true}
+            >
               <CalendarComponent
                 mode="single"
                 selected={date}
                 onSelect={handleDateSelect}
                 initialFocus
-                className="rounded-md border"
+                className="rounded-md border p-3"
               />
             </PopoverContent>
           </Popover>
