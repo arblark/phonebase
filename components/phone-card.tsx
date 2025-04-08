@@ -44,19 +44,8 @@ export function PhoneCard({
   const filteredComments = useMemo(() => {
     if (!currentUser) return [];
     
-    if (currentUser.role === 'admin') {
-      return record.comments;
-    }
-
-    // Для обычных пользователей показываем только их комментарии за текущий день
-    const today = new Date();
-    const todayStr = today.toLocaleDateString('ru-RU');
-
-    return record.comments.filter(comment => {
-      const commentDateStr = comment.dateAdded.split(',')[0].trim();
-      return comment.userId === currentUser.id && 
-             commentDateStr === todayStr;
-    });
+    // Все пользователи (admin и user) теперь видят все комментарии
+    return record.comments;
   }, [record.comments, currentUser]);
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

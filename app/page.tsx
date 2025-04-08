@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { usePhoneRecords } from '@/lib/hooks/use-phone-records';
-import { Search, LogOut, Menu } from 'lucide-react';
+import { Search, LogOut, Menu, CalendarIcon } from 'lucide-react';
 import { initializeSupabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 import { PhoneRecord } from '@/types';
@@ -23,6 +23,14 @@ import {
 } from "@/components/ui/sheet"
 import { UsersDialog } from '@/components/users-dialog';
 import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
@@ -32,6 +40,7 @@ export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAddPhoneDialogOpen, setIsAddPhoneDialogOpen] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   useEffect(() => {
     const init = async () => {
@@ -48,19 +57,34 @@ export default function Home() {
 
   const filteredRecords = useMemo(() => {
     const searchNumbers = searchQuery.replace(/\D/g, '');
-    const records = (phoneRecords || []).filter(record => {
+    
+    // Фильтрация по номеру телефона
+    let records = (phoneRecords || []).filter(record => {
       const phoneNumbers = record.phoneNumber.replace(/\D/g, '');
       if (currentUser?.role === 'user') {
         return searchNumbers.length >= 10 && phoneNumbers.includes(searchNumbers);
       }
       return searchNumbers.length >= 10 ? phoneNumbers.includes(searchNumbers) : true;
-    }).map(record => ({
+    });
+    
+    // Для администратора добавляем фильтрацию по дате
+    if (currentUser?.role === 'admin' && selectedDate) {
+      const selectedDateStr = format(selectedDate, 'dd.MM.yyyy');
+      
+      records = records.filter(record => {
+        const recordDateStr = record.dateAdded.split(',')[0].trim();
+        return recordDateStr === selectedDateStr;
+      });
+    }
+    
+    // Добавляем размытие номеров для обычных пользователей
+    records = records.map(record => ({
       ...record,
       blurred: currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length < 10,
     }));
 
-    return currentUser?.role === 'admin' ? records.slice(0, 6) : records;
-  }, [phoneRecords, searchQuery, currentUser?.role]);
+    return records;
+  }, [phoneRecords, searchQuery, currentUser?.role, selectedDate]);
 
   if (initializing) {
     return (
@@ -189,17 +213,50 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              className="pl-10 h-10 text-base"
-              placeholder="Поиск номера телефона..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Поиск номера телефона"
-              disabled={editingCardId !== null}
-              style={{ fontSize: '16px' }}
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                className="pl-10 h-10 text-base"
+                placeholder="Поиск номера телефона..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Поиск номера телефона"
+                disabled={editingCardId !== null}
+                style={{ fontSize: '16px' }}
+              />
+            </div>
+            
+            {currentUser?.role === 'admin' && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal h-10",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                    disabled={editingCardId !== null}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? (
+                      format(selectedDate, "dd.MM.yyyy", { locale: ru })
+                    ) : (
+                      <span>Выберите дату</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    initialFocus
+                    locale={ru}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
 
           {loading ? (
@@ -227,21 +284,23 @@ export default function Home() {
                   />
                 ))}
               </div>
-              {currentUser?.role === 'user' && 
-               searchQuery.replace(/\D/g, '').length >= 10 && 
-               filteredRecords.length === 0 && (
+              {filteredRecords.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
                   <p className="text-gray-600 mb-4">
-                    Номер {searchQuery} не найден в базе данных.
-                    {currentUser?.role === 'user' && " Вы можете добавить его:"}
+                    {currentUser?.role === 'admin' ? 
+                      `Номера телефонов за ${format(selectedDate || new Date(), "dd.MM.yyyy", { locale: ru })} не найдены.` : 
+                      `Номер ${searchQuery} не найден в базе данных.`}
+                    {currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length >= 10 && " Вы можете добавить его:"}
                   </p>
-                  <Button 
-                    onClick={() => setIsAddPhoneDialogOpen(true)}
-                    className="gap-2"
-                    disabled={editingCardId !== null}
-                  >
-                    Добавить номер
-                  </Button>
+                  {currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length >= 10 && (
+                    <Button 
+                      onClick={() => setIsAddPhoneDialogOpen(true)}
+                      className="gap-2"
+                      disabled={editingCardId !== null}
+                    >
+                      Добавить номер
+                    </Button>
+                  )}
                 </div>
               )}
             </>
