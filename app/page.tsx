@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { startOfDay, endOfDay } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
@@ -43,7 +45,11 @@ export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAddPhoneDialogOpen, setIsAddPhoneDialogOpen] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date()
+  });
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -70,13 +76,23 @@ export default function Home() {
       return searchNumbers.length >= 10 ? phoneNumbers.includes(searchNumbers) : true;
     });
     
-    // Для администратора добавляем фильтрацию по дате
-    if (currentUser?.role === 'admin' && selectedDate) {
-      const selectedDateStr = format(selectedDate, 'dd.MM.yyyy');
-      
+    // Для администратора добавляем фильтрацию по периоду дат
+    if (currentUser?.role === 'admin' && dateRange?.from) {
       records = records.filter(record => {
-        const recordDateStr = record.dateAdded.split(',')[0].trim();
-        return recordDateStr === selectedDateStr;
+        const recordDate = new Date(record.dateAdded.split(',')[0].trim().split('.').reverse().join('-'));
+        
+        // Если задан только начальный период
+        if (dateRange.from && !dateRange.to) {
+          return recordDate >= startOfDay(dateRange.from);
+        }
+        
+        // Если задан полный период
+        if (dateRange.from && dateRange.to) {
+          return recordDate >= startOfDay(dateRange.from) && 
+                 recordDate <= endOfDay(dateRange.to);
+        }
+        
+        return true;
       });
     }
     
@@ -87,7 +103,28 @@ export default function Home() {
     }));
 
     return records;
-  }, [phoneRecords, searchQuery, currentUser?.role, selectedDate]);
+  }, [phoneRecords, searchQuery, currentUser?.role, dateRange]);
+
+  // Форматирование диапазона дат для отображения в кнопке
+  const formatDateRange = () => {
+    if (!dateRange?.from) return "Выберите период";
+    
+    if (dateRange.from && !dateRange.to) {
+      return format(dateRange.from, "dd.MM.yyyy", { locale: ru });
+    }
+    
+    if (dateRange.from && dateRange.to && 
+        format(dateRange.from, "dd.MM.yyyy") === format(dateRange.to, "dd.MM.yyyy")) {
+      return format(dateRange.from, "dd.MM.yyyy", { locale: ru });
+    }
+    
+    return `${format(dateRange.from, "dd.MM.yyyy", { locale: ru })} - ${format(dateRange.to || dateRange.from, "dd.MM.yyyy", { locale: ru })}`;
+  };
+
+  // Обработчик применения фильтра периода
+  const applyDateFilter = () => {
+    setIsCalendarOpen(false);
+  };
 
   if (initializing) {
     return (
@@ -231,40 +268,42 @@ export default function Home() {
             </div>
             
             {currentUser?.role === 'admin' && (
-              <Dialog>
+              <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "justify-start text-left font-normal h-10",
-                      !selectedDate && "text-muted-foreground"
+                      !dateRange?.from && "text-muted-foreground"
                     )}
                     disabled={editingCardId !== null}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? (
-                      format(selectedDate, "dd.MM.yyyy", { locale: ru })
-                    ) : (
-                      <span>Выберите дату</span>
-                    )}
+                    {formatDateRange()}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="p-0 max-w-[350px]">
                   <DialogHeader className="p-4 pb-0">
-                    <DialogTitle>Выберите дату</DialogTitle>
+                    <DialogTitle>Выберите период</DialogTitle>
                     <DialogDescription>
-                      Выберите дату для отображения телефонов
+                      Выберите период дат для отображения телефонов
                     </DialogDescription>
                   </DialogHeader>
                   <div className="p-4">
                     <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
                       initialFocus
                       locale={ru}
                       className="border-none p-3 mx-auto"
+                      numberOfMonths={1}
                     />
+                    <div className="flex justify-end mt-4">
+                      <Button onClick={applyDateFilter}>
+                        Показать
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -300,7 +339,7 @@ export default function Home() {
                 <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
                   <p className="text-gray-600 mb-4">
                     {currentUser?.role === 'admin' ? 
-                      `Номера телефонов за ${format(selectedDate || new Date(), "dd.MM.yyyy", { locale: ru })} не найдены.` : 
+                      `Номера телефонов за выбранный период не найдены.` : 
                       `Номер ${searchQuery} не найден в базе данных.`}
                     {currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length >= 10 && " Вы можете добавить его:"}
                   </p>
