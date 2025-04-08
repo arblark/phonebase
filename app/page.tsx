@@ -25,10 +25,13 @@ import { UsersDialog } from '@/components/users-dialog';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -228,8 +231,8 @@ export default function Home() {
             </div>
             
             {currentUser?.role === 'admin' && (
-              <Popover>
-                <PopoverTrigger asChild>
+              <Dialog>
+                <DialogTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
@@ -245,24 +248,26 @@ export default function Home() {
                       <span>Выберите дату</span>
                     )}
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent 
-                  className="w-auto p-0" 
-                  align="start" 
-                  side="bottom" 
-                  sideOffset={4}
-                  avoidCollisions={true}
-                >
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    initialFocus
-                    locale={ru}
-                    className="border-none p-3"
-                  />
-                </PopoverContent>
-              </Popover>
+                </DialogTrigger>
+                <DialogContent className="p-0 max-w-[350px]">
+                  <DialogHeader className="p-4 pb-0">
+                    <DialogTitle>Выберите дату</DialogTitle>
+                    <DialogDescription>
+                      Выберите дату для отображения телефонов
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="p-4">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      initialFocus
+                      locale={ru}
+                      className="border-none p-3 mx-auto"
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
           </div>
 

@@ -14,7 +14,6 @@ import { LogEntry } from '@/types';
 import { ClipboardList, Loader2, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -25,9 +24,11 @@ interface ActionLogsProps {
 
 export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
+    setIsCalendarOpen(false);
   };
 
   const filteredLogs = date
@@ -55,8 +56,9 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
           <DialogDescription className="sr-only">
             Просмотр логов действий пользователей
           </DialogDescription>
-          <Popover>
-            <PopoverTrigger asChild>
+          
+          <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <DialogTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
@@ -67,23 +69,25 @@ export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
                 <Calendar className="mr-2 h-4 w-4" />
                 {date ? format(date, 'PPP') : <span>Выбрать дату</span>}
               </Button>
-            </PopoverTrigger>
-            <PopoverContent 
-              className="w-auto p-0" 
-              align="start" 
-              side="bottom" 
-              sideOffset={4}
-              avoidCollisions={true}
-            >
-              <CalendarComponent
-                mode="single"
-                selected={date}
-                onSelect={handleDateSelect}
-                initialFocus
-                className="rounded-md border p-3"
-              />
-            </PopoverContent>
-          </Popover>
+            </DialogTrigger>
+            <DialogContent className="p-0 max-w-[350px]">
+              <DialogHeader className="p-4 pb-0">
+                <DialogTitle>Выберите дату</DialogTitle>
+                <DialogDescription>
+                  Выберите дату для фильтрации логов
+                </DialogDescription>
+              </DialogHeader>
+              <div className="p-4">
+                <CalendarComponent
+                  mode="single"
+                  selected={date}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="rounded-md border p-3 mx-auto"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         </DialogHeader>
         <ScrollArea className="h-[500px] pr-4">
           {loading ? (
