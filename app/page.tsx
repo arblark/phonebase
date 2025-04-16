@@ -65,19 +65,20 @@ export default function Home() {
   }, []);
 
   const filteredRecords = useMemo(() => {
+    // Начинаем с полного списка номеров
+    let records = (phoneRecords || []);
+    
+    // Фильтрация по номеру телефона (всегда имеет приоритет)
     const searchNumbers = searchQuery.replace(/\D/g, '');
-    
-    // Фильтрация по номеру телефона
-    let records = (phoneRecords || []).filter(record => {
-      const phoneNumbers = record.phoneNumber.replace(/\D/g, '');
-      if (currentUser?.role === 'user') {
-        return searchNumbers.length >= 10 && phoneNumbers.includes(searchNumbers);
-      }
-      return searchNumbers.length >= 10 ? phoneNumbers.includes(searchNumbers) : true;
-    });
-    
-    // Для администратора добавляем фильтрацию по периоду дат
-    if (currentUser?.role === 'admin' && dateRange?.from) {
+    if (searchNumbers.length >= 10) {
+      records = records.filter(record => {
+        const phoneNumbers = record.phoneNumber.replace(/\D/g, '');
+        return phoneNumbers.includes(searchNumbers);
+      });
+    } 
+    // Если поиск по номеру не активен, и пользователь - администратор, фильтруем по дате
+    else if (currentUser?.role === 'admin' && dateRange?.from) {
+      // Фильтрация по диапазону дат
       records = records.filter(record => {
         const recordDate = new Date(record.dateAdded.split(',')[0].trim().split('.').reverse().join('-'));
         
