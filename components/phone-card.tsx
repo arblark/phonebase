@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ThumbsUp, ThumbsDown, Trash2, ShieldAlert, ShieldCheck, CircleUser, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
 
 interface PhoneCardProps {
   record: PhoneRecord;
@@ -33,11 +34,13 @@ export function PhoneCard({
   className
 }: PhoneCardProps) {
   const [newComment, setNewComment] = useState('');
-  const [isPositive, setIsPositive] = useState(true);
+  const [isPositive, setIsPositive] = useState<boolean | null>(null);
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [updatingRating, setUpdatingRating] = useState<'increment' | 'decrement' | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [ratingError, setRatingError] = useState<string | null>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Фильтрация комментариев в зависимости от роли пользователя
@@ -71,12 +74,27 @@ export function PhoneCard({
   }, [newComment]);
 
   const handleAddComment = async () => {
+    setCommentError(null);
+    setRatingError(null);
+    
+    // Проверяем, что тип комментария выбран
+    if (isPositive === null) {
+      setRatingError("Выберите тип комментария");
+      return;
+    }
+    
+    // Проверяем, что комментарий не пустой
+    if (!newComment.trim()) {
+      setCommentError("Комментарий обязателен");
+      return;
+    }
+    
     if (newComment.trim()) {
       setIsAddingComment(true);
       try {
-        await onAddComment(record.id, newComment, isPositive);
+        await onAddComment(record.id, newComment, isPositive!);
         setNewComment('');
-        setIsPositive(true);
+        setIsPositive(null);
         if (currentUser?.role === 'user') {
           setIsEditing(false);
           onCommentEditEnd?.();
@@ -233,48 +251,62 @@ export function PhoneCard({
               placeholder="Введите комментарий..."
               value={newComment}
               onChange={handleCommentChange}
-              className="transition-all duration-200 focus:ring-2 text-base min-h-[40px] resize-none"
+              className={cn(
+                "transition-all duration-200 focus:ring-2 text-base min-h-[40px] resize-none",
+                commentError && "border-red-500 focus-visible:ring-red-500"
+              )}
               style={{ fontSize: '16px' }}
+              required
             />
+            {commentError && (
+              <p className="text-sm text-red-500 mt-1">{commentError}</p>
+            )}
             <div className="flex flex-wrap gap-2 justify-between">
               <div className="flex gap-1">
+                {ratingError && (
+                  <p className="text-sm text-red-500 w-full mb-1">{ratingError}</p>
+                )}
                 <Button
                   size="sm"
-                  variant={isPositive ? "default" : "outline"}
+                  variant={isPositive === true ? "default" : "outline"}
                   onClick={() => setIsPositive(true)}
                   className={cn(
                     "transition-all duration-200",
-                    isPositive ? "bg-green-500 hover:bg-green-600" : ""
+                    isPositive === true ? "bg-green-500 hover:bg-green-600" : ""
                   )}
                   disabled={!newComment.trim()}
                 >
                   <ThumbsUp className="w-4 h-4 mr-1" />
+                  <span>Хороший</span>
                 </Button>
                 <Button
                   size="sm"
-                  variant={!isPositive ? "default" : "outline"}
+                  variant={isPositive === false ? "default" : "outline"}
                   onClick={() => setIsPositive(false)}
                   className={cn(
                     "transition-all duration-200",
-                    !isPositive ? "bg-red-500 hover:bg-red-600" : ""
+                    isPositive === false ? "bg-red-500 hover:bg-red-600" : ""
                   )}
                   disabled={!newComment.trim()}
                 >
                   <ThumbsDown className="w-4 h-4 mr-1" />
+                  <span>Плохой</span>
                 </Button>
               </div>
               <Button 
                 onClick={handleAddComment} 
                 size="sm"
-                disabled={isAddingComment || !newComment.trim()}
-                className="transition-transform hover:scale-105"
+                disabled={isAddingComment || !newComment.trim() || isPositive === null}
+                className={cn(
+                  "transition-transform hover:scale-105",
+                  isPositive === true ? "bg-green-500 hover:bg-green-600" :
+                  isPositive === false ? "bg-red-500 hover:bg-red-600" : ""
+                )}
               >
                 {isAddingComment ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-1" />
                 ) : (
-                  <>
-                    <span>Сохранить</span>
-                  </>
+                  <span>Сохранить</span>
                 )}
               </Button>
             </div>

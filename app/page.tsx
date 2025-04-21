@@ -96,6 +96,10 @@ export default function Home() {
         return true;
       });
     }
+    // Для пользователя с ролью user, если поиск не активен, не показываем ни одной карточки
+    else if (currentUser?.role === 'user' && searchNumbers.length < 10) {
+      return [];
+    }
     
     // Добавляем размытие номеров для обычных пользователей
     records = records.map(record => ({
@@ -341,7 +345,9 @@ export default function Home() {
                   <p className="text-gray-600 mb-4">
                     {currentUser?.role === 'admin' ? 
                       `Номера телефонов за выбранный период не найдены.` : 
-                      `Номер ${searchQuery} не найден в базе данных.`}
+                      searchQuery.replace(/\D/g, '').length >= 10 ?
+                      `Номер ${searchQuery} не найден в базе данных.` :
+                      `Введите полный номер телефона для поиска.`}
                     {currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length >= 10 && " Вы можете добавить его:"}
                   </p>
                   {currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length >= 10 && (

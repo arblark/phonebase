@@ -12,12 +12,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { PhoneRecord } from '@/types';
 import { cn } from '@/lib/utils';
 import InputMask from 'react-input-mask';
 import { Loader2 } from 'lucide-react';
-import { Plus } from 'lucide-react';
+import { Plus, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface AddPhoneDialogProps {
   onAdd: (record: Omit<PhoneRecord, 'id' | 'dateAdded' | 'comments'> & { comment?: string }) => void;
@@ -30,10 +29,12 @@ interface AddPhoneDialogProps {
 
 export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenChange, currentUser, disabled }: AddPhoneDialogProps) {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [isPositive, setIsPositive] = useState(false);
+  const [isPositive, setIsPositive] = useState<boolean | null>(null);
   const [comment, setComment] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [ratingError, setRatingError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -70,6 +71,21 @@ export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenCha
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setCommentError(null);
+    setRatingError(null);
+    
+    // Проверяем, что комментарий не пустой
+    if (!comment.trim()) {
+      setCommentError("Комментарий обязателен");
+      return;
+    }
+    
+    // Проверяем, что тип номера выбран
+    if (isPositive === null) {
+      setRatingError("Сначала укажите Хороший или Плохой");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -80,12 +96,12 @@ export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenCha
         phoneNumber: formattedNumber,
         isDangerous: !isPositive,
         rating: isPositive ? 1 : -1,
-        comment: comment.trim() || undefined
+        comment: comment.trim()
       });
       
       handleOpenChange(false);
       setPhoneNumber('');
-      setIsPositive(false);
+      setIsPositive(null);
       setComment('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка при добавлении номера');
@@ -155,47 +171,68 @@ export function AddPhoneDialog({ onAdd, initialPhoneNumber = '', open, onOpenCha
               )}
             </div>
           </div>
-          
-          <div className="flex items-center justify-between space-x-2 p-4 rounded-lg border">
-            <Label htmlFor="rating-type" className="font-medium text-base">Норм или НЕнорм</Label>
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                "text-base transition-colors",
-                isPositive ? "text-green-600" : "text-red-600"
-              )}>
-                {isPositive ? "Хороший" : "Плохой"}
-              </span>
-              <Switch
-                id="rating-type"
-                checked={isPositive}
-                onCheckedChange={setIsPositive}
-                className={cn(
-                  "transition-colors",
-                  isPositive ? "bg-green-500" : "bg-red-500",
-                  "hover:bg-green-600 data-[state=checked]:bg-green-500",
-                  "hover:bg-red-600 data-[state=unchecked]:bg-red-500"
-                )}
-              />
-            </div>
-          </div>
 
           <div className="space-y-2">
-            <Label htmlFor="comment" className="text-base">Комментарий</Label>
+            <Label htmlFor="comment" className="text-base">Комментарий <span className="text-red-500">*</span></Label>
             <Input
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Добавьте комментарий..."
-              className="text-base"
+              className={cn(
+                "text-base",
+                commentError && "border-red-500 focus-visible:ring-red-500"
+              )}
               style={{ fontSize: '16px' }}
+              required
             />
+            {commentError && (
+              <p className="text-sm text-red-500 mt-1">{commentError}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label className="text-base">Поставить оценку <span className="text-red-500">*</span></Label>
+            <div className="flex items-center gap-3">
+              <Button 
+                type="button"
+                className={cn(
+                  "flex-1 gap-2",
+                  isPositive === true 
+                    ? "bg-green-500 hover:bg-green-600 text-white" 
+                    : "bg-slate-500 hover:bg-slate-800 text-white"
+                )}
+                onClick={() => setIsPositive(true)}
+              >
+                <ThumbsUp className="w-4 h-4" />
+                Хороший
+              </Button>
+              <Button 
+                type="button"
+                className={cn(
+                  "flex-1 gap-2",
+                  isPositive === false 
+                    ? "bg-red-500 hover:bg-red-600 text-white" 
+                    : "bg-slate-500 hover:bg-slate-800 text-white"
+                )}
+                onClick={() => setIsPositive(false)}
+              >
+                <ThumbsDown className="w-4 h-4" />
+                Плохой
+              </Button>
+            </div>
+            {ratingError && (
+              <p className="text-sm text-red-500 mt-1">{ratingError}</p>
+            )}
           </div>
 
           <Button 
             type="submit"
             className={cn(
               "w-full transition-colors text-base",
-              isPositive ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+              isPositive === true ? "bg-green-500 hover:bg-green-600" : 
+              isPositive === false ? "bg-red-500 hover:bg-red-600" :
+              "bg-primary hover:bg-primary/90"
             )}
             disabled={phoneNumber.length < 10 || isSubmitting}
           >
