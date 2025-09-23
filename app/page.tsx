@@ -39,7 +39,7 @@ import { DateRange } from "react-day-picker";
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
-  const { phoneRecords, logs, loading, logsLoading, reloadLogs, addPhoneRecord, addComment, deleteComment, updateRating } = usePhoneRecords();
+  const { phoneRecords, logs, loading, logsLoading, reloadLogs, addPhoneRecord, addComment, deleteComment, updateRating, loadComments } = usePhoneRecords();
   const [searchQuery, setSearchQuery] = useState('');
   const [initializing, setInitializing] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -109,6 +109,13 @@ export default function Home() {
 
     return records;
   }, [phoneRecords, searchQuery, currentUser?.role, dateRange]);
+
+  // lazy load comments for visible cards
+  useEffect(() => {
+    const toLoad = filteredRecords.filter(r => r.comments.length === 0).map(r => r.id);
+    if (toLoad.length) loadComments(toLoad);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredRecords]);
 
   // Форматирование диапазона дат для отображения в кнопке
   const formatDateRange = () => {

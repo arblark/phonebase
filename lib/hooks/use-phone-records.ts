@@ -19,6 +19,7 @@ interface PhoneRecordsState {
   loading: boolean;
   logsLoading: boolean;
   reloadLogs: (date?: Date) => Promise<void>;
+  loadComments: (ids: string[]) => Promise<void>;
   addPhoneRecord: (params: AddPhoneRecordParams) => Promise<Database['public']['Tables']['phone_records']['Row'] | null>;
   addComment: (phoneId: string, text: string, isPositive: boolean, userId: string) => Promise<void>;
   deleteComment: (phoneId: string, commentId: string, userId: string) => Promise<void>;
@@ -137,16 +138,58 @@ export function usePhoneRecords(): PhoneRecordsState {
     try {
       const { data, error } = await supabase
         .from('phone_records')
-        .select(`*, comments (*, users ( username ))`)
+        .select(`id, phone_number, rating, is_dangerous, date_added`)
         .order('created_at', { ascending: false });
       if (error) throw error;
       if (!data) return;
-      const formatted = data.map(mapDbRecord);
+      const formatted = data.map((r: any) => ({
+        id: r.id,
+        phoneNumber: r.phone_number,
+        isDangerous: r.is_dangerous,
+        rating: r.rating,
+        dateAdded: new Date(r.date_added).toLocaleString('ru-RU', {
+          year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+        }),
+        comments: [],
+      }));
       setPhoneRecords(formatted);
     } catch (error) {
       console.error('Error fetching phone records:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadComments = async (ids: string[]): Promise<void> => {
+    if (ids.length === 0) return;
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`*, users ( username )`)
+        .in('phone_id', ids)
+        .order('date_added', { ascending: false }) as SupabaseJoinResponse<DatabaseComment, { username: string }>;
+      if (error) throw error;
+      if (!data) return;
+
+      const grouped: Record<string, Comment[]> = {};
+      data.forEach((c: any) => {
+        const comment: Comment = {
+          id: c.id,
+          text: c.text,
+          isPositive: c.is_positive,
+          dateAdded: new Date(c.date_added).toLocaleString('ru-RU', {
+            year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+          }),
+          userId: c.user_id,
+          userName: c.users?.username || 'Unknown User',
+        };
+        if (!grouped[c.phone_id]) grouped[c.phone_id] = [];
+        grouped[c.phone_id].push(comment);
+      });
+
+      setPhoneRecords(prev => prev.map(r => grouped[r.id] ? { ...r, comments: grouped[r.id] } : r));
+    } catch (e) {
+      console.error('Error loading comments:', e);
     }
   };
 
@@ -339,6 +382,7 @@ export function usePhoneRecords(): PhoneRecordsState {
     loading,
     logsLoading,
     reloadLogs: fetchLogs,
+    loadComments,
     addPhoneRecord,
     addComment,
     deleteComment,
