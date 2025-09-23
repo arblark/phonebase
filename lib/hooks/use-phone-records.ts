@@ -18,6 +18,7 @@ interface PhoneRecordsState {
   logs: LogEntry[];
   loading: boolean;
   logsLoading: boolean;
+  reloadLogs: (date?: Date) => Promise<void>;
   addPhoneRecord: (params: AddPhoneRecordParams) => Promise<Database['public']['Tables']['phone_records']['Row'] | null>;
   addComment: (phoneId: string, text: string, isPositive: boolean, userId: string) => Promise<void>;
   deleteComment: (phoneId: string, commentId: string, userId: string) => Promise<void>;
@@ -32,34 +33,81 @@ interface SupabaseJoinResponse<T, U> {
   error: Error | null;
 }
 
+// helper для форматирования записи из Supabase (с вложенными comments)
+function mapDbRecord(record: any): PhoneRecord {
+  const formattedComments: Comment[] = (record.comments || []).map((c: any) => ({
+    id: c.id,
+    text: c.text,
+    isPositive: c.is_positive,
+    dateAdded: new Date(c.date_added).toLocaleString('ru-RU', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    }),
+    userId: c.user_id,
+    userName: c.users?.username || 'Unknown User',
+  }));
+  return {
+    id: record.id,
+    phoneNumber: record.phone_number,
+    isDangerous: record.is_dangerous,
+    rating: record.rating,
+    dateAdded: new Date(record.date_added).toLocaleString('ru-RU', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    }),
+    comments: formattedComments,
+  };
+}
+
+async function fetchRecordById(id: string): Promise<PhoneRecord | null> {
+  const { data, error } = await supabase
+    .from('phone_records')
+    .select(`*, comments (*, users ( username ))`)
+    .eq('id', id)
+    .single();
+  if (error) return null;
+  return mapDbRecord(data);
+}
+
 export function usePhoneRecords(): PhoneRecordsState {
   const [phoneRecords, setPhoneRecords] = useState<PhoneRecord[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(true);
 
-  const fetchLogs = async (): Promise<void> => {
+  const getDayBounds = (date: Date) => {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+    return { start: start.toISOString(), end: end.toISOString() };
+  };
+
+  const fetchLogs = async (date: Date = new Date()): Promise<void> => {
+    setLogsLoading(true);
     try {
+      const { start, end } = getDayBounds(date);
+
       const { data, error } = await supabase
         .from('logs')
-        .select(`
-          *,
-          users (
-            username
-          )
-        `)
-        .order('created_at', { ascending: false }) as SupabaseJoinResponse<DatabaseLog, { username: string }>;
+        .select(
+          `id, action, details, timestamp, users ( username )`
+        )
+        .gte('timestamp', start)
+        .lte('timestamp', end)
+        .order('timestamp', { ascending: false })
+        .limit(1000) as SupabaseJoinResponse<DatabaseLog, { username: string }>;
 
       if (error) throw error;
       if (!data) return;
 
-      setLogs(data.map(log => ({
-        id: log.id,
-        action: log.action,
-        details: log.details,
-        timestamp: log.timestamp,
-        user: log.users?.username || 'System'
-      })));
+      setLogs(
+        data.map((log) => ({
+          id: log.id,
+          action: log.action,
+          details: log.details,
+          timestamp: log.timestamp,
+          user: log.users?.username || 'System',
+        }))
+      );
     } catch (error) {
       console.error('Error fetching logs:', error);
     } finally {
@@ -87,63 +135,14 @@ export function usePhoneRecords(): PhoneRecordsState {
 
   const fetchPhoneRecords = async (): Promise<void> => {
     try {
-      const { data: records, error: recordsError } = await supabase
+      const { data, error } = await supabase
         .from('phone_records')
-        .select('*')
+        .select(`*, comments (*, users ( username ))`)
         .order('created_at', { ascending: false });
-
-      if (recordsError) throw recordsError;
-      if (!records) return;
-
-      const recordsWithComments = await Promise.all(
-        records.map(async (record) => {
-          const { data: comments, error: commentsError } = await supabase
-            .from('comments')
-            .select(`
-              *,
-              users (
-                username
-              )
-            `)
-            .eq('phone_id', record.id)
-            .order('created_at', { ascending: false }) as SupabaseJoinResponse<DatabaseComment, { username: string }>;
-
-          if (commentsError) throw commentsError;
-          if (!comments) return null;
-
-          const formattedComments: Comment[] = comments.map(comment => ({
-            id: comment.id,
-            text: comment.text,
-            isPositive: comment.is_positive,
-            dateAdded: new Date(comment.date_added).toLocaleString('ru-RU', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
-            userId: comment.user_id,
-            userName: comment.users?.username || 'Unknown User'
-          }));
-
-          return {
-            id: record.id,
-            phoneNumber: record.phone_number,
-            isDangerous: record.is_dangerous,
-            rating: record.rating,
-            dateAdded: new Date(record.date_added).toLocaleString('ru-RU', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
-            comments: formattedComments
-          };
-        })
-      );
-
-      setPhoneRecords(recordsWithComments.filter((record): record is PhoneRecord => record !== null));
+      if (error) throw error;
+      if (!data) return;
+      const formatted = data.map(mapDbRecord);
+      setPhoneRecords(formatted);
     } catch (error) {
       console.error('Error fetching phone records:', error);
     } finally {
@@ -153,7 +152,6 @@ export function usePhoneRecords(): PhoneRecordsState {
 
   useEffect(() => {
     fetchPhoneRecords();
-    fetchLogs();
   }, []);
 
   const addPhoneRecord = async ({ 
@@ -185,10 +183,10 @@ export function usePhoneRecords(): PhoneRecordsState {
         .from('phone_records')
         .insert({
           phone_number: phoneNumber,
-          rating: rating,
+          rating,
           is_dangerous: isDangerous,
           date_added: now,
-          created_at: now
+          created_at: now,
         })
         .select()
         .single();
@@ -211,11 +209,10 @@ export function usePhoneRecords(): PhoneRecordsState {
       }
 
       await addLog(
-        userId, 
-        'Добавлен номер', 
+        userId,
+        'Добавлен номер',
         `Добавлен номер ${phoneNumber} с рейтингом ${rating}${initialComment ? `. Комментарий: "${initialComment}"` : ''}`
       );
-      await fetchPhoneRecords();
       return record;
     } catch (error) {
       console.error('Error adding phone record:', error);
@@ -245,32 +242,9 @@ export function usePhoneRecords(): PhoneRecordsState {
 
       if (commentError) throw commentError;
 
-      const { data: record, error: recordError } = await supabase
-        .from('phone_records')
-        .select('rating, phone_number')
-        .eq('id', phoneId)
-        .single();
+      const full = await fetchRecordById(phoneId);
+      if (full) setPhoneRecords(prev => prev.map(r => (r.id === phoneId ? full : r)));
 
-      if (recordError) throw recordError;
-
-      const newRating = record.rating + (isPositive ? 1 : -1);
-
-      const { error: updateError } = await supabase
-        .from('phone_records')
-        .update({ 
-          rating: newRating,
-          is_dangerous: newRating < 0
-        })
-        .eq('id', phoneId);
-
-      if (updateError) throw updateError;
-
-      await addLog(
-        userId,
-        'Добавлен комментарий',
-        `Добавлен ${isPositive ? 'позитивный' : 'негативный'} комментарий к номеру ${record.phone_number}: "${text}"`
-      );
-      await fetchPhoneRecords();
     } catch (error) {
       console.error('Error adding comment:', error);
     }
@@ -308,22 +282,14 @@ export function usePhoneRecords(): PhoneRecordsState {
 
       if (deleteError) throw deleteError;
 
-      const { error: updateError } = await supabase
-        .from('phone_records')
-        .update({ 
-          rating: newRating,
-          is_dangerous: newRating < 0
-        })
-        .eq('id', phoneId);
-
-      if (updateError) throw updateError;
+      const full = await fetchRecordById(phoneId);
+      if (full) setPhoneRecords(prev => prev.map(r => (r.id === phoneId ? full : r)));
 
       await addLog(
         userId,
         'Удалён комментарий',
         `Удалён комментарий "${comment.text}" в номере ${record.phone_number}`
       );
-      await fetchPhoneRecords();
     } catch (error) {
       console.error('Error deleting comment:', error);
     }
@@ -360,7 +326,8 @@ export function usePhoneRecords(): PhoneRecordsState {
         'Изменен рейтинг',
         `${increment ? 'Увеличен' : 'Уменьшен'} рейтинг номера ${record.phone_number} (с ${record.rating} до ${newRating})`
       );
-      await fetchPhoneRecords();
+      const full = await fetchRecordById(phoneId);
+      if (full) setPhoneRecords(prev => prev.map(r => (r.id === phoneId ? full : r)));
     } catch (error) {
       console.error('Error updating rating:', error);
     }
@@ -371,6 +338,7 @@ export function usePhoneRecords(): PhoneRecordsState {
     logs,
     loading,
     logsLoading,
+    reloadLogs: fetchLogs,
     addPhoneRecord,
     addComment,
     deleteComment,

@@ -20,30 +20,29 @@ import { cn } from '@/lib/utils';
 interface ActionLogsProps {
   logs: LogEntry[];
   loading?: boolean;
+  reloadLogs: (date?: Date) => Promise<void>;
 }
 
-export function ActionLogs({ logs, loading = false }: ActionLogsProps) {
+export function ActionLogs({ logs, loading = false, reloadLogs }: ActionLogsProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const handleDateSelect = (selectedDate: Date | undefined) => {
+  const handleDateSelect = async (selectedDate: Date | undefined) => {
     setDate(selectedDate);
     setIsCalendarOpen(false);
+    await reloadLogs(selectedDate ?? new Date());
   };
 
-  const filteredLogs = date
-    ? logs.filter(log => {
-        const logDate = new Date(log.timestamp);
-        return (
-          logDate.getDate() === date.getDate() &&
-          logDate.getMonth() === date.getMonth() &&
-          logDate.getFullYear() === date.getFullYear()
-        );
-      })
-    : logs;
+  const filteredLogs = logs;
 
   return (
-    <Dialog>
+    <Dialog
+      onOpenChange={async (open) => {
+        if (open) {
+          await reloadLogs(date ?? new Date());
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2 text-base">
           <ClipboardList className="w-4 h-4" />

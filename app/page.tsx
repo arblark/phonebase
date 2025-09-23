@@ -39,7 +39,7 @@ import { DateRange } from "react-day-picker";
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
-  const { phoneRecords, logs, loading, logsLoading, addPhoneRecord, addComment, deleteComment, updateRating } = usePhoneRecords();
+  const { phoneRecords, logs, loading, logsLoading, reloadLogs, addPhoneRecord, addComment, deleteComment, updateRating } = usePhoneRecords();
   const [searchQuery, setSearchQuery] = useState('');
   const [initializing, setInitializing] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -193,7 +193,7 @@ export default function Home() {
           <div className="mt-4 space-y-4">
             {currentUser?.role === 'admin' && (
               <>
-                <ActionLogs logs={logs} loading={logsLoading} />
+                <ActionLogs logs={logs} loading={logsLoading} reloadLogs={reloadLogs} />
                 <UsersDialog />
               </>
             )}
@@ -234,7 +234,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-4">
               {currentUser?.role === 'admin' && (
                 <>
-                  <ActionLogs logs={logs} loading={logsLoading} />
+                  <ActionLogs logs={logs} loading={logsLoading} reloadLogs={reloadLogs} />
                   <UsersDialog />
                 </>
               )}
