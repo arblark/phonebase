@@ -39,7 +39,7 @@ import { DateRange } from "react-day-picker";
 
 export default function Home() {
   const { currentUser, login, logout } = useAuth();
-  const { phoneRecords, logs, loading, logsLoading, reloadLogs, addPhoneRecord, addComment, deleteComment, updateRating, loadComments } = usePhoneRecords();
+  const { phoneRecords, logs, loading, logsLoading, reloadLogs, addPhoneRecord, addComment, deleteComment, updateRating, loadComments, fetchPhoneRecords } = usePhoneRecords();
   const [searchQuery, setSearchQuery] = useState('');
   const [initializing, setInitializing] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -65,57 +65,28 @@ export default function Home() {
   }, []);
 
   const filteredRecords = useMemo(() => {
-    // Начинаем с полного списка номеров
-    let records = (phoneRecords || []);
-    
-    // Фильтрация по номеру телефона (всегда имеет приоритет)
-    const searchNumbers = searchQuery.replace(/\D/g, '');
-    if (searchNumbers.length >= 10) {
-      records = records.filter(record => {
-        const phoneNumbers = record.phoneNumber.replace(/\D/g, '');
-        return phoneNumbers.includes(searchNumbers);
-      });
-    } 
-    // Если поиск по номеру не активен, и пользователь - администратор, фильтруем по дате
-    else if (currentUser?.role === 'admin' && dateRange?.from) {
-      // Фильтрация по диапазону дат
-      records = records.filter(record => {
-        const recordDate = new Date(record.dateAdded.split(',')[0].trim().split('.').reverse().join('-'));
-        
-        // Если задан только начальный период
-        if (dateRange.from && !dateRange.to) {
-          return recordDate >= startOfDay(dateRange.from);
-        }
-        
-        // Если задан полный период
-        if (dateRange.from && dateRange.to) {
-          return recordDate >= startOfDay(dateRange.from) && 
-                 recordDate <= endOfDay(dateRange.to);
-        }
-        
-        return true;
-      });
-    }
-    // Для пользователя с ролью user, если поиск не активен, не показываем ни одной карточки
-    else if (currentUser?.role === 'user' && searchNumbers.length < 10) {
-      return [];
-    }
-    
-    // Добавляем размытие номеров для обычных пользователей
-    records = records.map(record => ({
-      ...record,
+    return phoneRecords.map(r => ({
+      ...r,
       blurred: currentUser?.role === 'user' && searchQuery.replace(/\D/g, '').length < 10,
     }));
+  }, [phoneRecords, currentUser?.role, searchQuery]);
 
-    return records;
-  }, [phoneRecords, searchQuery, currentUser?.role, dateRange]);
-
-  // lazy load comments for visible cards
   useEffect(() => {
-    const toLoad = filteredRecords.filter(r => r.comments.length === 0).map(r => r.id);
+    if (!currentUser) return;
+    fetchPhoneRecords({
+      role: currentUser.role as 'admin' | 'user',
+      search: searchQuery,
+      dateFrom: currentUser.role === 'admin' ? dateRange?.from : undefined,
+      dateTo: currentUser.role === 'admin' ? dateRange?.to : undefined,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, dateRange, currentUser?.role]);
+
+  useEffect(() => {
+    const toLoad = phoneRecords.filter(r => r.comments.length === 0).map(r => r.id);
     if (toLoad.length) loadComments(toLoad);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredRecords]);
+  }, [phoneRecords]);
 
   // Форматирование диапазона дат для отображения в кнопке
   const formatDateRange = () => {

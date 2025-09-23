@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PhoneRecord, LogEntry, Comment, Database } from '@/types';
+import { startOfDay, endOfDay } from 'date-fns';
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   throw new Error('Missing environment variables for Supabase connection');
@@ -20,6 +21,13 @@ interface PhoneRecordsState {
   logsLoading: boolean;
   reloadLogs: (date?: Date) => Promise<void>;
   loadComments: (ids: string[]) => Promise<void>;
+  // добавляем метод для выборочной загрузки
+  fetchPhoneRecords: (params?: {
+    search?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    role?: 'admin' | 'user';
+  }) => Promise<void>;
   addPhoneRecord: (params: AddPhoneRecordParams) => Promise<Database['public']['Tables']['phone_records']['Row'] | null>;
   addComment: (phoneId: string, text: string, isPositive: boolean, userId: string) => Promise<void>;
   deleteComment: (phoneId: string, commentId: string, userId: string) => Promise<void>;
@@ -134,14 +142,48 @@ export function usePhoneRecords(): PhoneRecordsState {
     }
   };
 
-  const fetchPhoneRecords = async (): Promise<void> => {
+  // заменяем старую функцию fetchPhoneRecords
+  const fetchPhoneRecords = async (params?: {
+    search?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    role?: 'admin' | 'user';
+  }): Promise<void> => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { search, dateFrom, dateTo, role } = params || {};
+
+      // если обычный пользователь без полноценного номера – не делаем запрос
+      if (role === 'user' && (!search || search.replace(/\D/g, '').length < 10)) {
+        setPhoneRecords([]);
+        return;
+      }
+
+      let query = supabase
         .from('phone_records')
         .select(`id, phone_number, rating, is_dangerous, date_added`)
         .order('created_at', { ascending: false });
+
+      const digits = search?.replace(/\D/g, '') || '';
+      if (digits.length >= 10) {
+        query = query.ilike('phone_number', `%${digits}%`);
+      }
+
+      // фильтрация по дате для админа (только если поиск по номеру не активен)
+      if (role === 'admin' && digits.length < 10 && dateFrom) {
+        query = query.gte('date_added', startOfDay(dateFrom).toISOString());
+        if (dateTo) {
+          query = query.lte('date_added', endOfDay(dateTo).toISOString());
+        }
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      if (!data) return;
+      if (!data) {
+        setPhoneRecords([]);
+        return;
+      }
+
       const formatted = data.map((r: any) => ({
         id: r.id,
         phoneNumber: r.phone_number,
@@ -155,6 +197,7 @@ export function usePhoneRecords(): PhoneRecordsState {
       setPhoneRecords(formatted);
     } catch (error) {
       console.error('Error fetching phone records:', error);
+      setPhoneRecords([]);
     } finally {
       setLoading(false);
     }
@@ -193,9 +236,7 @@ export function usePhoneRecords(): PhoneRecordsState {
     }
   };
 
-  useEffect(() => {
-    fetchPhoneRecords();
-  }, []);
+  // удаляем вызов useEffect(fetchPhoneRecords())
 
   const addPhoneRecord = async ({ 
     phoneNumber, 
@@ -383,6 +424,7 @@ export function usePhoneRecords(): PhoneRecordsState {
     logsLoading,
     reloadLogs: fetchLogs,
     loadComments,
+    fetchPhoneRecords, // экспортируем новый метод
     addPhoneRecord,
     addComment,
     deleteComment,
