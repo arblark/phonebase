@@ -63,6 +63,7 @@ function mapDbRecord(record: any): PhoneRecord {
       year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
     }),
     comments: formattedComments,
+    commentsLoaded: true,
   };
 }
 
@@ -193,6 +194,7 @@ export function usePhoneRecords(): PhoneRecordsState {
           year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
         }),
         comments: [],
+        commentsLoaded: false,
       }));
       setPhoneRecords(formatted);
     } catch (error) {
@@ -230,7 +232,11 @@ export function usePhoneRecords(): PhoneRecordsState {
         grouped[c.phone_id].push(comment);
       });
 
-      setPhoneRecords(prev => prev.map(r => grouped[r.id] ? { ...r, comments: grouped[r.id] } : r));
+      setPhoneRecords(prev => prev.map(r =>
+        ids.includes(r.id)
+          ? { ...r, comments: grouped[r.id] || [], commentsLoaded: true }
+          : r
+      ));
     } catch (e) {
       console.error('Error loading comments:', e);
     }

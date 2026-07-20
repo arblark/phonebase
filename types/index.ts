@@ -2,6 +2,7 @@ export interface PhoneRecord {
   id: string;
   phoneNumber: string;
   comments: Comment[];
+  commentsLoaded?: boolean;
   rating: number;
   isDangerous: boolean;
   dateAdded: string;

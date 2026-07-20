@@ -83,7 +83,7 @@ export default function Home() {
   }, [searchQuery, dateRange, currentUser?.role]);
 
   useEffect(() => {
-    const toLoad = phoneRecords.filter(r => r.comments.length === 0).map(r => r.id);
+    const toLoad = phoneRecords.filter(r => !r.commentsLoaded).map(r => r.id);
     if (toLoad.length) loadComments(toLoad);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phoneRecords]);
