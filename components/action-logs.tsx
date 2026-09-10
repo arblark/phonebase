@@ -142,8 +142,8 @@ export function ActionLogs({ logs, loading = false, reloadLogs }: ActionLogsProp
           <span>Логи</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-4 sm:p-6">
-        <DialogHeader className="pb-3 border-b">
+      <DialogContent className="max-w-2xl max-h-[85vh] h-[85vh] sm:max-h-[90vh] sm:h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden gap-0">
+        <DialogHeader className="pb-3 border-b shrink-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
@@ -202,7 +202,7 @@ export function ActionLogs({ logs, loading = false, reloadLogs }: ActionLogsProp
         </DialogHeader>
 
         {/* Поиск по загруженным логам */}
-        <div className="py-2 border-b">
+        <div className="py-2 border-b shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -223,8 +223,8 @@ export function ActionLogs({ logs, loading = false, reloadLogs }: ActionLogsProp
           </div>
         </div>
 
-        {/* Список логов */}
-        <ScrollArea className="flex-1 h-[450px] pr-3 my-2">
+        {/* Список логов с надежной нативной прокруткой */}
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 my-2">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500 gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
@@ -284,10 +284,10 @@ export function ActionLogs({ logs, loading = false, reloadLogs }: ActionLogsProp
               })}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Подвал */}
-        <div className="pt-2 border-t flex items-center justify-between text-xs text-gray-500">
+        <div className="pt-2 border-t flex items-center justify-between text-xs text-gray-500 shrink-0">
           <span>
             Показано: <strong className="text-gray-800">{filteredLogs.length}</strong> из{' '}
             <strong className="text-gray-800">{logs.length}</strong>
