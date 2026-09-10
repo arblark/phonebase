@@ -70,6 +70,15 @@ export function UsersDialog() {
 
       if (error) throw error;
       
+      await supabase
+        .from('logs')
+        .insert({
+          user_id: editedUser.id,
+          action: 'Изменение пользователя',
+          details: `Администратор изменил данные пользователя ${editedUser.username || editedUser.id}`,
+          timestamp: new Date().toISOString()
+        });
+
       await fetchUsers();
       setEditedUser(null);
     } catch (error) {
