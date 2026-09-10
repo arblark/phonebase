@@ -87,6 +87,7 @@ export interface Database {
           device_id?: string;
           password_requested_at?: string;
         };
+        Relationships: [];
       };
       phone_records: {
         Row: {
@@ -113,6 +114,7 @@ export interface Database {
           date_added?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       comments: {
         Row: {
@@ -142,6 +144,7 @@ export interface Database {
           date_added?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       logs: {
         Row: {
@@ -168,6 +171,7 @@ export interface Database {
           timestamp?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {

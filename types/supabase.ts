@@ -34,6 +34,9 @@ export interface Database {
           verification_code?: string;
           code_expires_at?: string;
           daily_password?: string;
+          password_expires_at?: string;
+          device_id?: string;
+          password_requested_at?: string;
         };
         Update: {
           id?: string;
@@ -45,7 +48,11 @@ export interface Database {
           verification_code?: string;
           code_expires_at?: string;
           daily_password?: string;
+          password_expires_at?: string;
+          device_id?: string;
+          password_requested_at?: string;
         };
+        Relationships: [];
       };
       phone_records: {
         Row: {
@@ -72,6 +79,7 @@ export interface Database {
           date_added?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       comments: {
         Row: {
@@ -101,13 +109,14 @@ export interface Database {
           date_added?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       logs: {
         Row: {
           id: string;
           action: string;
           details: string;
-          user_id: string;
+          user_id: string | null;
           timestamp: string;
           created_at: string;
         };
@@ -115,7 +124,7 @@ export interface Database {
           id?: string;
           action: string;
           details: string;
-          user_id?: string;
+          user_id?: string | null;
           timestamp?: string;
           created_at?: string;
         };
@@ -123,10 +132,11 @@ export interface Database {
           id?: string;
           action?: string;
           details?: string;
-          user_id?: string;
+          user_id?: string | null;
           timestamp?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {

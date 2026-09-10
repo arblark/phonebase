@@ -68,6 +68,7 @@ export function useAuth() {
     return () => {
       if (sessionTimer) clearTimeout(sessionTimer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
