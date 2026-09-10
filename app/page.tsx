@@ -5,6 +5,7 @@ import { AuthForm } from '@/components/auth-form';
 import { PhoneCard } from '@/components/phone-card';
 import { AddPhoneDialog } from '@/components/add-phone-dialog';
 import { ActionLogs } from '@/components/action-logs';
+import { RecentActionsDialog } from '@/components/recent-actions-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/hooks/use-auth';
@@ -171,6 +172,7 @@ export default function Home() {
           <div className="mt-4 space-y-4">
             {currentUser?.role === 'admin' && (
               <>
+                <RecentActionsDialog />
                 <ActionLogs logs={logs} loading={logsLoading} reloadLogs={reloadLogs} />
                 <UsersDialog />
               </>
@@ -212,6 +214,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-4">
               {currentUser?.role === 'admin' && (
                 <>
+                  <RecentActionsDialog />
                   <ActionLogs logs={logs} loading={logsLoading} reloadLogs={reloadLogs} />
                   <UsersDialog />
                 </>

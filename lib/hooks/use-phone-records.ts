@@ -333,7 +333,20 @@ export function usePhoneRecords(): PhoneRecordsState {
       if (commentError) throw commentError;
 
       const full = await fetchRecordById(phoneId);
-      if (full) setPhoneRecords(prev => prev.map(r => (r.id === phoneId ? full : r)));
+      if (full) {
+        setPhoneRecords(prev => prev.map(r => (r.id === phoneId ? full : r)));
+        await addLog(
+          userId,
+          'Добавлен комментарий',
+          `Добавлен ${isPositive ? 'положительный' : 'отрицательный'} комментарий "${text}" к номеру ${full.phoneNumber}`
+        );
+      } else {
+        await addLog(
+          userId,
+          'Добавлен комментарий',
+          `Добавлен ${isPositive ? 'положительный' : 'отрицательный'} комментарий "${text}"`
+        );
+      }
 
     } catch (error) {
       console.error('Error adding comment:', error);

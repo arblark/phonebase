@@ -180,6 +180,15 @@ export function useAuth() {
         await sendTelegramCode(user.telegram_id, dailyPassword);
       }
 
+      await supabase
+        .from('logs')
+        .insert({
+          user_id: user.id,
+          action: 'Запрос пароля',
+          details: `Пользователь ${user.username} запросил временный пароль в Telegram`,
+          timestamp: new Date().toISOString()
+        });
+
       return { success: true };
     } catch (error) {
       console.error('Error requesting daily password:', error);
@@ -234,6 +243,15 @@ export function useAuth() {
 
         localStorage.setItem('userSession', JSON.stringify(session));
         setCurrentUser(session.user);
+
+        await supabase
+          .from('logs')
+          .insert({
+            user_id: user.id,
+            action: 'Вход в систему',
+            details: `Пользователь ${user.username} вошел в систему`,
+            timestamp: new Date().toISOString()
+          });
       } else {
         if (password !== user.password) {
           return { success: false, message: 'Неверные учетные данные' };
@@ -251,6 +269,15 @@ export function useAuth() {
           user: adminUser,
           expiresAt: Date.now() + (365 * 24 * 60 * 60 * 1000)
         }));
+
+        await supabase
+          .from('logs')
+          .insert({
+            user_id: user.id,
+            action: 'Вход в систему',
+            details: `Администратор ${user.username} вошел в систему`,
+            timestamp: new Date().toISOString()
+          });
       }
 
       return { success: true };
